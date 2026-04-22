@@ -1,65 +1,76 @@
-import Image from "next/image";
+import { Hero } from "@/components/home/Hero";
+import { Marquee } from "@/components/home/Marquee";
+import { FeaturedProducts } from "@/components/home/FeaturedProducts";
+import { CategoryGrid } from "@/components/home/CategoryGrid";
+import { AboutSection } from "@/components/home/AboutSection";
+import { Reviews } from "@/components/home/Reviews";
+import { InstagramStrip } from "@/components/home/InstagramStrip";
+import prisma from "@/lib/prisma";
 
-export default function Home() {
+const fallbackProducts = [
+  {
+    id: "1", name: "Stringer Vest", slug: "stringer-vest", price: 699,
+    images: [
+      "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=800&q=80",
+      "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=800&q=80",
+    ],
+    sizes: ["XS", "S", "M", "L", "XL", "XXL"], colors: ["Black", "White", "Charcoal Grey"],
+    isNew: true, category: "Vests", stock: 100,
+  },
+  {
+    id: "2", name: "Heavyweight Hoodie", slug: "heavyweight-hoodie", price: 1799,
+    images: [
+      "https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=800&q=80",
+      "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800&q=80",
+    ],
+    sizes: ["XS", "S", "M", "L", "XL", "XXL"], colors: ["Black", "Charcoal Grey"],
+    isNew: true, category: "Hoodies", stock: 100,
+  },
+  {
+    id: "3", name: "Cargo Track Pants", slug: "cargo-track-pants", price: 1299,
+    images: [
+      "https://images.unsplash.com/photo-1588117305388-c2631a279f82?w=800&q=80",
+      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80",
+    ],
+    sizes: ["XS", "S", "M", "L", "XL", "XXL"], colors: ["Black"],
+    isNew: true, category: "Bottoms", stock: 100,
+  },
+  {
+    id: "4", name: '7" Training Shorts', slug: "7-inch-training-shorts", price: 899,
+    images: [
+      "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800&q=80",
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80",
+    ],
+    sizes: ["XS", "S", "M", "L", "XL", "XXL"], colors: ["Black", "White", "Charcoal Grey"],
+    isNew: false, category: "Shorts", stock: 100,
+  },
+];
+
+async function getFeaturedProducts() {
+  try {
+    const products = await prisma.product.findMany({
+      where: { isFeatured: true },
+      take: 4,
+      orderBy: { createdAt: "desc" },
+    });
+    return products.length > 0 ? products : fallbackProducts;
+  } catch {
+    return fallbackProducts;
+  }
+}
+
+export default async function HomePage() {
+  const products = await getFeaturedProducts();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <>
+      <Hero />
+      <Marquee />
+      <FeaturedProducts products={products} />
+      <CategoryGrid />
+      <AboutSection />
+      <Reviews />
+      <InstagramStrip />
+    </>
   );
 }
