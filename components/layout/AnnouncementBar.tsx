@@ -1,16 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+const TEXT = "FREE SHIPPING ON ORDERS ABOVE ₹999 · COD AVAILABLE · MADE IN INDIA 🇮🇳 · ";
+const REPEATED = TEXT.repeat(6);
 
 export function AnnouncementBar() {
-  const [hidden, setHidden] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => setHidden(window.scrollY > 80);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <div
       style={{
@@ -19,12 +12,45 @@ export function AnnouncementBar() {
         left: 0,
         right: 0,
         zIndex: 60,
-        transform: hidden ? "translateY(-100%)" : "translateY(0)",
-        transition: "transform 0.3s ease",
+        height: 32,
+        background: "#ffffff",
+        overflow: "hidden",
+        display: "flex",
+        alignItems: "center",
       }}
-      className="bg-white text-[#0a0a0a] text-xs text-center py-2 px-4 font-medium tracking-widest uppercase"
     >
-      FREE SHIPPING ON ORDERS ABOVE ₹999 · COD AVAILABLE · MADE IN INDIA 🇮🇳
+      <div
+        style={{
+          display: "flex",
+          whiteSpace: "nowrap",
+          animation: "marquee 20s linear infinite",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "Inter, sans-serif",
+            fontSize: "0.62rem",
+            letterSpacing: "0.15em",
+            color: "#000000",
+            textTransform: "uppercase",
+            paddingRight: 0,
+          }}
+        >
+          {REPEATED}
+        </span>
+        <span
+          style={{
+            fontFamily: "Inter, sans-serif",
+            fontSize: "0.62rem",
+            letterSpacing: "0.15em",
+            color: "#000000",
+            textTransform: "uppercase",
+          }}
+          aria-hidden
+        >
+          {REPEATED}
+        </span>
+      </div>
     </div>
   );
 }
