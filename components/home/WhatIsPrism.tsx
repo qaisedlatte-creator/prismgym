@@ -46,14 +46,7 @@ export function WhatIsPrism() {
         </motion.div>
 
         {/* 3-column layout */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: 0,
-          }}
-          className="grid grid-cols-1 md:grid-cols-3"
-        >
+        <div className="grid grid-cols-1 md:grid-cols-3">
           {PILLARS.map((pillar, i) => (
             <motion.div
               key={pillar.title}

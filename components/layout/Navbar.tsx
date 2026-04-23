@@ -24,7 +24,7 @@ export function Navbar() {
       <nav
         style={{
           position: "fixed",
-          top: 32, // below announcement bar
+          top: 0,
           left: 0,
           right: 0,
           zIndex: 50,

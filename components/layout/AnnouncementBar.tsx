@@ -1,16 +1,14 @@
 "use client";
 
 const TEXT = "FREE SHIPPING ON ORDERS ABOVE ₹999 · COD AVAILABLE · MADE IN INDIA 🇮🇳 · ";
-const REPEATED = TEXT.repeat(6);
+const REPEATED = TEXT.repeat(8);
 
 export function AnnouncementBar() {
   return (
     <div
       style={{
-        position: "fixed",
+        position: "sticky",
         top: 0,
-        left: 0,
-        right: 0,
         zIndex: 60,
         height: 32,
         background: "#ffffff",
@@ -19,34 +17,17 @@ export function AnnouncementBar() {
         alignItems: "center",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          whiteSpace: "nowrap",
-          animation: "marquee 20s linear infinite",
-        }}
-      >
+      <div className="marquee-track">
         <span
           style={{
             fontFamily: "Inter, sans-serif",
-            fontSize: "0.62rem",
+            fontSize: "0.6rem",
             letterSpacing: "0.15em",
             color: "#000000",
             textTransform: "uppercase",
+            whiteSpace: "nowrap",
             paddingRight: 0,
           }}
-        >
-          {REPEATED}
-        </span>
-        <span
-          style={{
-            fontFamily: "Inter, sans-serif",
-            fontSize: "0.62rem",
-            letterSpacing: "0.15em",
-            color: "#000000",
-            textTransform: "uppercase",
-          }}
-          aria-hidden
         >
           {REPEATED}
         </span>

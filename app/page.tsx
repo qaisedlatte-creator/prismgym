@@ -1,4 +1,4 @@
-import { HeroSequence } from "@/components/home/HeroSequence";
+import { HeroStatic } from "@/components/home/HeroStatic";
 import { AboutSection } from "@/components/home/AboutSection";
 import { BestsellerRow } from "@/components/home/BestsellerRow";
 import { ProductGridSection } from "@/components/home/ProductGridSection";
@@ -14,8 +14,8 @@ const bestsellers = PRODUCTS.filter((p) => p.images.length > 0);
 export default function HomePage() {
   return (
     <>
-      {/* S1 — Full viewport scroll hero with giant PRISM text */}
-      <HeroSequence />
+      {/* S1 — Static hero with giant PRISM text + product image */}
+      <HeroStatic />
 
       {/* S2 — About the brand */}
       <AboutSection />

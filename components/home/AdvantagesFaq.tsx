@@ -27,11 +27,8 @@ export function AdvantagesFaq() {
           maxWidth: 1280,
           margin: "0 auto",
           paddingInline: "clamp(1rem, 4vw, 3rem)",
-          display: "grid",
-          gap: "clamp(2rem, 6vw, 6rem)",
-          alignItems: "start",
         }}
-        className="grid grid-cols-1 md:grid-cols-2"
+        className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-start"
       >
         {/* Left — Advantages */}
         <div>

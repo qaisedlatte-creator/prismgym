@@ -37,14 +37,7 @@ export function HowToOrder() {
         </motion.div>
 
         {/* Steps row */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: 0,
-          }}
-          className="grid grid-cols-2 md:grid-cols-4"
-        >
+        <div className="grid grid-cols-2 md:grid-cols-4">
           {STEPS.map((step, i) => (
             <motion.div
               key={step.num}

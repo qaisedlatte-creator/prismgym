@@ -19,11 +19,8 @@ export function WhyPrism() {
           maxWidth: 1280,
           margin: "0 auto",
           paddingInline: "clamp(1rem, 4vw, 3rem)",
-          display: "grid",
-          gap: "clamp(2rem, 6vw, 6rem)",
-          alignItems: "start",
         }}
-        className="grid grid-cols-1 md:grid-cols-2"
+        className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-20 items-start"
       >
         {/* Left — heading */}
         <motion.div
