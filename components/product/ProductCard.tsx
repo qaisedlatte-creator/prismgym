@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { ShoppingBag } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/lib/store";
@@ -20,16 +19,13 @@ interface Product {
   isNew: boolean;
   category: string;
   stock: number;
+  color?: string;
 }
 
-interface ProductCardProps {
-  product: Product;
-}
-
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false);
   const [selectedSize, setSelectedSize] = useState("");
-  const { addItem, openCart } = useCartStore();
+  const { addItem } = useCartStore();
   const { toast } = useToast();
 
   const handleQuickAdd = (e: React.MouseEvent) => {
@@ -43,7 +39,7 @@ export function ProductCard({ product }: ProductCardProps) {
       productId: product.id,
       name: product.name,
       price: product.price,
-      image: product.images[0],
+      image: product.images[0] || "",
       size: selectedSize,
       color: product.colors[0],
       quantity: 1,
@@ -52,115 +48,123 @@ export function ProductCard({ product }: ProductCardProps) {
     toast({ title: "Added to cart", description: `${product.name} · ${selectedSize}`, variant: "success" });
   };
 
+  const hasImage = product.images && product.images.length > 0 && product.images[0];
   const isSoldOut = product.stock === 0;
+  const colorLabel = (product as any).color || product.colors[0] || "";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.5 }}
+    <Link
+      href={`/product/${product.slug}`}
+      className="block group"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => { setHovered(false); setSelectedSize(""); }}
     >
-      <Link
-        href={`/product/${product.slug}`}
-        className="group block bg-[#1a1a1a] rounded-sm overflow-hidden relative"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => { setHovered(false); setSelectedSize(""); }}
+      {/* Image — 4:5 portrait */}
+      <div
+        className="relative overflow-hidden"
+        style={{ aspectRatio: "4/5" }}
       >
-        {/* Image container */}
-        <div className="relative aspect-[3/4] overflow-hidden bg-[#111111]">
-          <motion.div
-            animate={{ scale: hovered ? 1.03 : 1 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="absolute inset-0"
-          >
+        {hasImage ? (
+          <>
             <Image
               src={product.images[0]}
               alt={product.name}
               fill
               className="object-cover"
+              style={{
+                transform: hovered ? "scale(1.04)" : "scale(1)",
+                transition: "transform 400ms ease",
+              }}
             />
-          </motion.div>
-
-          {/* Second image on hover */}
-          {product.images[1] && (
-            <motion.div
-              className="absolute inset-0"
-              animate={{ opacity: hovered ? 1 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
+            {/* Second image on hover */}
+            {product.images[1] && (
               <Image
                 src={product.images[1]}
-                alt={`${product.name} alt view`}
+                alt={`${product.name} view 2`}
                 fill
                 className="object-cover"
+                style={{
+                  opacity: hovered ? 1 : 0,
+                  transition: "opacity 300ms ease",
+                  position: "absolute",
+                  inset: 0,
+                }}
               />
-            </motion.div>
-          )}
-
-          {/* Overlays */}
-          {isSoldOut && (
-            <div className="absolute inset-0 bg-[#0a0a0a]/70 flex items-center justify-center">
-              <span className="text-white text-sm tracking-[0.3em] font-bold" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
-                SOLD OUT
-              </span>
-            </div>
-          )}
-
-          {product.isNew && !isSoldOut && (
-            <div className="absolute top-3 left-3 bg-white text-[#0a0a0a] text-[10px] font-bold tracking-[0.2em] px-2 py-1">
-              NEW
-            </div>
-          )}
-
-          {/* Quick add on hover */}
-          {!isSoldOut && (
-            <motion.div
-              className="absolute bottom-0 left-0 right-0 bg-[#0a0a0a]/90 p-3"
-              initial={{ y: "100%" }}
-              animate={{ y: hovered ? 0 : "100%" }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              onClick={(e) => e.preventDefault()}
+            )}
+          </>
+        ) : (
+          /* No-image placeholder */
+          <div className="absolute inset-0 bg-[#111111] flex items-center justify-center">
+            <span
+              className="text-[#2a2a2a] text-center px-4"
+              style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.1rem", letterSpacing: "0.1em" }}
             >
-              <p className="text-[#888888] text-[10px] tracking-widest mb-2 uppercase">Quick Add</p>
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {product.sizes.slice(0, 6).map((size) => (
-                  <button
-                    key={size}
-                    onClick={(e) => { e.preventDefault(); setSelectedSize(size); }}
-                    className={`text-[10px] px-2 py-1 border tracking-wide transition-colors ${
-                      selectedSize === size
-                        ? "bg-white text-[#0a0a0a] border-white"
-                        : "border-[#2e2e2e] text-[#888888] hover:border-white hover:text-white"
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={handleQuickAdd}
-                className="w-full bg-white text-[#0a0a0a] text-[11px] font-bold tracking-[0.2em] py-2 hover:bg-[#c0c0c0] transition-colors flex items-center justify-center gap-2"
-              >
-                <ShoppingBag size={12} />
-                ADD TO CART
-              </button>
-            </motion.div>
-          )}
-        </div>
+              {product.name}
+            </span>
+          </div>
+        )}
 
-        {/* Product info */}
-        <div className="p-4">
-          <p className="text-[#888888] text-[10px] tracking-[0.2em] uppercase mb-1">{product.category}</p>
-          <h3
-            className="text-white text-base tracking-wide leading-tight mb-2 group-hover:text-[#c0c0c0] transition-colors"
-            style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+        {isSoldOut && (
+          <div className="absolute inset-0 bg-[#0a0a0a]/70 flex items-center justify-center">
+            <span className="text-white text-sm tracking-[0.3em]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+              SOLD OUT
+            </span>
+          </div>
+        )}
+
+        {/* Quick add — slides up on hover */}
+        {!isSoldOut && (
+          <div
+            className="absolute bottom-0 left-0 right-0 bg-[#0a0a0a]/90 p-3"
+            style={{
+              transform: hovered ? "translateY(0)" : "translateY(100%)",
+              transition: "transform 250ms ease",
+            }}
+            onClick={(e) => e.preventDefault()}
           >
-            {product.name}
-          </h3>
-          <p className="text-white text-sm font-medium">{formatPrice(product.price)}</p>
-        </div>
-      </Link>
-    </motion.div>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {product.sizes.slice(0, 5).map((size) => (
+                <button
+                  key={size}
+                  onClick={(e) => { e.preventDefault(); setSelectedSize(size); }}
+                  className={`text-[10px] px-2 py-1 border tracking-wide transition-colors ${
+                    selectedSize === size
+                      ? "bg-white text-[#0a0a0a] border-white"
+                      : "border-[#2a2a2a] text-[#888888] hover:border-white hover:text-white"
+                  }`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={handleQuickAdd}
+              className="w-full bg-white text-[#0a0a0a] text-[11px] font-bold tracking-[0.2em] py-2 hover:bg-[#c0c0c0] transition-colors flex items-center justify-center gap-2"
+            >
+              <ShoppingBag size={12} />
+              ADD TO CART
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Product info */}
+      <div className="pt-3 pb-2">
+        <h3
+          className="text-white leading-tight mb-0.5"
+          style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.1rem" }}
+        >
+          {product.name}
+        </h3>
+        {colorLabel && (
+          <p className="text-[#888888] mb-0.5" style={{ fontSize: "0.75rem", fontFamily: "Inter, sans-serif" }}>
+            {colorLabel}
+          </p>
+        )}
+        <p className="text-white" style={{ fontSize: "0.9rem", fontFamily: "Inter, sans-serif" }}>
+          {formatPrice(product.price)}
+        </p>
+      </div>
+    </Link>
   );
 }

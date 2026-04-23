@@ -4,14 +4,13 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, User, Search, X, Menu } from "lucide-react";
+import { ShoppingBag, User, X, Menu } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { useSession } from "next-auth/react";
 
 const navLinks = [
   { href: "/catalog", label: "CATALOG" },
   { href: "/about", label: "ABOUT" },
-  { href: "/#contact", label: "CONTACT" },
 ];
 
 export function Navbar() {
@@ -22,37 +21,39 @@ export function Navbar() {
   const itemCount = getItemCount();
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 80);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
     <>
-      <motion.nav
-        className={`fixed top-8 left-0 right-0 z-40 transition-all duration-300 ${
-          scrolled ? "bg-[#0a0a0a]/95 backdrop-blur-md border-b border-[#2e2e2e]" : "bg-transparent"
-        }`}
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+      <nav
+        style={{
+          position: "fixed",
+          top: scrolled ? 0 : "2rem",
+          left: 0,
+          right: 0,
+          zIndex: 40,
+          background: scrolled ? "rgba(10,10,10,0.95)" : "transparent",
+          backdropFilter: scrolled ? "blur(12px)" : "none",
+          WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
+          borderBottom: scrolled ? "1px solid #2a2a2a" : "none",
+          transition: "background 0.3s ease, backdrop-filter 0.3s ease, top 0.3s ease",
+        }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
+          {/* Logo — image only, no text */}
+          <Link href="/" className="flex items-center">
             <Image
               src="/logo.svg"
               alt="PRISM INDIA"
-              width={36}
-              height={36}
-              className="invert"
+              width={52}
+              height={52}
+              priority
+              style={{ height: "52px", width: "auto" }}
+              className="invert md:h-[52px] h-[44px]"
             />
-            <span
-              className="text-white font-bebas text-xl tracking-widest hidden sm:block"
-              style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-            >
-              PRISM INDIA
-            </span>
           </Link>
 
           {/* Desktop nav */}
@@ -70,9 +71,6 @@ export function Navbar() {
 
           {/* Icons */}
           <div className="flex items-center gap-4">
-            <button className="text-[#888888] hover:text-white transition-colors p-1">
-              <Search size={18} />
-            </button>
             <Link
               href={session ? "/account" : "/login"}
               className="text-[#888888] hover:text-white transition-colors p-1"
@@ -98,7 +96,7 @@ export function Navbar() {
             </button>
           </div>
         </div>
-      </motion.nav>
+      </nav>
 
       {/* Mobile menu */}
       <AnimatePresence>
@@ -111,11 +109,8 @@ export function Navbar() {
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             <div className="flex items-center justify-between mb-16">
-              <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-2">
-                <Image src="/logo.svg" alt="PRISM" width={32} height={32} className="invert" />
-                <span className="font-bebas text-xl text-white tracking-widest" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
-                  PRISM INDIA
-                </span>
+              <Link href="/" onClick={() => setMobileOpen(false)}>
+                <Image src="/logo.svg" alt="PRISM" width={44} height={44} className="invert" style={{ height: "44px", width: "auto" }} />
               </Link>
               <button onClick={() => setMobileOpen(false)} className="text-white">
                 <X size={24} />
@@ -133,7 +128,7 @@ export function Navbar() {
                   <Link
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className="text-white font-bebas text-5xl tracking-widest hover:text-[#888888] transition-colors"
+                    className="text-white text-5xl tracking-widest hover:text-[#888888] transition-colors"
                     style={{ fontFamily: "'Bebas Neue', sans-serif" }}
                   >
                     {link.label}
@@ -143,12 +138,12 @@ export function Navbar() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.2 }}
               >
                 <Link
                   href={session ? "/account" : "/login"}
                   onClick={() => setMobileOpen(false)}
-                  className="text-white font-bebas text-5xl tracking-widest hover:text-[#888888] transition-colors"
+                  className="text-white text-5xl tracking-widest hover:text-[#888888] transition-colors"
                   style={{ fontFamily: "'Bebas Neue', sans-serif" }}
                 >
                   {session ? "ACCOUNT" : "LOGIN"}
@@ -156,7 +151,7 @@ export function Navbar() {
               </motion.div>
             </nav>
 
-            <div className="mt-auto pt-8 border-t border-[#2e2e2e]">
+            <div className="mt-auto pt-8 border-t border-[#2a2a2a]">
               <p className="text-[#888888] text-xs tracking-widest">@prismindia.in</p>
             </div>
           </motion.div>
