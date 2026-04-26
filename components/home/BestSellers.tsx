@@ -1,124 +1,105 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import { ProductCard } from "@/components/product/ProductCard";
+import { motion } from "framer-motion";
+import { ProductCard } from "@/components/ui/ProductCard";
 import type { Product } from "@/lib/products";
 
-export function BestSellers({ products }: { products: Product[] }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [current, setCurrent] = useState(1);
-  const total = products.length;
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.25, 0, 0, 1] as [number, number, number, number] } },
+};
 
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const onScroll = () => {
-      const cardW = el.scrollWidth / total;
-      setCurrent(Math.round(el.scrollLeft / cardW) + 1);
-    };
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, [total]);
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07 } },
+};
 
+interface BestsellersProps {
+  products: Product[];
+}
+
+export function Bestsellers({ products }: BestsellersProps) {
   return (
-    <section style={{ padding: "64px 0 32px", background: "#0a0a0a" }}>
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "space-between",
-          paddingInline: "clamp(1rem, 4vw, 3rem)",
-          marginBottom: 24,
-        }}
-      >
-        <div>
-          <p
-            style={{
-              fontFamily: "Inter, sans-serif",
-              fontSize: "0.65rem",
-              letterSpacing: "0.25em",
-              color: "#888",
-              textTransform: "uppercase",
-              marginBottom: 4,
-            }}
-          >
-            TOP PICKS
-          </p>
-          <h2
-            style={{
-              fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: "clamp(2rem, 6vw, 4rem)",
-              color: "#fff",
-              lineHeight: 1,
-              letterSpacing: "0.03em",
-            }}
-          >
-            BEST SELLERS
-          </h2>
-        </div>
-        <Link
-          href="/catalog"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            fontSize: "0.75rem",
-            color: "#888",
-            fontFamily: "Inter, sans-serif",
-            letterSpacing: "0.05em",
-            textDecoration: "none",
-            transition: "color 0.2s",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#888")}
+    <section
+      style={{
+        padding: "clamp(4rem, 8vw, 7.5rem) 0",
+        background: "#fff",
+        borderTop: "1px solid #e8e8e8",
+      }}
+    >
+      <div style={{ maxWidth: 1320, margin: "0 auto", padding: "0 clamp(1rem, 4vw, 3rem)" }}>
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-80px" }}
+          variants={stagger}
+          style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 56 }}
         >
-          ↳ Discover all items
-        </Link>
-      </div>
-
-      {/* Horizontal scroll carousel */}
-      <div
-        ref={scrollRef}
-        style={{
-          display: "flex",
-          gap: 12,
-          overflowX: "scroll",
-          scrollSnapType: "x mandatory",
-          scrollbarWidth: "none",
-          paddingInline: "clamp(1rem, 4vw, 3rem)",
-          paddingBottom: 8,
-        }}
-        className="hide-scrollbar"
-      >
-        {products.map((product) => (
-          <div
-            key={product.id}
-            style={{
-              flexShrink: 0,
-              width: "clamp(220px, 60vw, 280px)",
-              scrollSnapAlign: "start",
-            }}
-          >
-            <ProductCard product={product} />
+          <div>
+            <motion.p
+              variants={fadeUp}
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: "0.6rem",
+                fontWeight: 500,
+                letterSpacing: "0.22em",
+                textTransform: "uppercase",
+                color: "#666",
+                marginBottom: 8,
+              }}
+            >
+              CUSTOMER FAVOURITES
+            </motion.p>
+            <motion.h2
+              variants={fadeUp}
+              style={{
+                fontFamily: "'Bebas Neue', sans-serif",
+                fontSize: "clamp(2.5rem, 6vw, 4rem)",
+                lineHeight: 1,
+                color: "#000",
+              }}
+            >
+              BESTSELLERS
+            </motion.h2>
           </div>
-        ))}
-      </div>
+          <motion.div variants={fadeUp}>
+            <Link
+              href="/catalog"
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: "0.7rem",
+                fontWeight: 500,
+                letterSpacing: "0.12em",
+                color: "#000",
+                textDecoration: "none",
+                borderBottom: "1px solid #000",
+                paddingBottom: 2,
+              }}
+            >
+              VIEW ALL →
+            </Link>
+          </motion.div>
+        </motion.div>
 
-      {/* Position counter */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginTop: 16,
-          gap: 8,
-          alignItems: "center",
-        }}
-      >
-        <span style={{ fontFamily: "Inter, sans-serif", fontSize: "0.75rem", color: "#888" }}>
-          {String(current).padStart(2, "0")}/{String(total).padStart(2, "0")}
-        </span>
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-60px" }}
+          variants={stagger}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: "clamp(2rem, 3vw, 2.5rem) clamp(1rem, 2.5vw, 2rem)",
+          }}
+          className="grid-cols-2 md:grid-cols-4"
+        >
+          {products.map((product) => (
+            <motion.div key={product.id} variants={fadeUp}>
+              <ProductCard product={product} />
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </section>
   );

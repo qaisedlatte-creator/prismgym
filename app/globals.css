@@ -1,11 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #ffffff;
+  --background: #ffffff;
+  --foreground: #000000;
   --font-bebas: 'Bebas Neue', sans-serif;
-  --font-inter: 'Inter', sans-serif;
+  --font-dm: 'DM Sans', sans-serif;
 }
 
 * {
@@ -17,39 +16,34 @@ html {
 }
 
 body {
-  background-color: #0a0a0a;
-  color: #ffffff;
-  font-family: 'Inter', sans-serif;
+  background-color: #ffffff;
+  color: #000000;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
 ::selection {
-  background-color: #ffffff;
-  color: #0a0a0a;
+  background-color: #000000;
+  color: #ffffff;
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: #ffffff;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2e2e2e;
-  border-radius: 3px;
+  background: #cccccc;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #888888;
-}
-
-.font-bebas {
-  font-family: 'Bebas Neue', sans-serif;
-  letter-spacing: 0.05em;
 }
 
 .marquee-track {
@@ -58,25 +52,13 @@ body {
   animation: marquee 30s linear infinite;
 }
 
-.marquee-track-reverse {
-  display: flex;
-  width: max-content;
-  animation: marquee-reverse 30s linear infinite;
+.marquee-track:hover {
+  animation-play-state: paused;
 }
 
 @keyframes marquee {
-  0% { transform: translateX(0); }
+  0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
-}
-
-@keyframes marquee-reverse {
-  0% { transform: translateX(-50%); }
-  100% { transform: translateX(0); }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
 }
 
 .hide-scrollbar {
@@ -85,12 +67,4 @@ body {
 }
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
-}
-
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0px 1000px #1a1a1a inset;
-  -webkit-text-fill-color: #ffffff;
-  transition: background-color 5000s ease-in-out 0s;
 }

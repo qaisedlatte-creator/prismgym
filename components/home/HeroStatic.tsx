@@ -1,38 +1,85 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 
 export function HeroStatic() {
+  const containerRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"],
+  });
+
+  const prismY = useTransform(scrollYProgress, [0, 1], ["0%", "-18%"]);
+  const indiaY = useTransform(scrollYProgress, [0, 1], ["0%", "12%"]);
+  const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
+  const imageOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
   return (
     <section
+      ref={containerRef}
       style={{
-        minHeight: "100vh",
-        background: "#0a0a0a",
+        minHeight: "92vh",
+        background: "#fff",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        overflow: "hidden",
         position: "relative",
-        paddingTop: 96,
+        overflow: "hidden",
+        borderBottom: "2px solid #000",
+        paddingTop: 80,
         paddingBottom: 64,
       }}
     >
-      {/* Giant PRISM text — oversized, crops both sides */}
+      {/* Subtle grid lines */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage:
+            "linear-gradient(#00000009 1px, transparent 1px), linear-gradient(90deg, #00000009 1px, transparent 1px)",
+          backgroundSize: "96px 96px",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Logo watermark */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none",
+        }}
+      >
+        <Image
+          src="/logo.svg"
+          alt=""
+          width={520}
+          height={520}
+          aria-hidden
+          style={{ opacity: 0.035, width: "min(520px, 70vw)", height: "auto" }}
+        />
+      </div>
+
+      {/* PRISM */}
       <motion.div
-        initial={{ opacity: 0, y: 60 }}
+        style={{ textAlign: "center", width: "100%", y: prismY }}
+        initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-        style={{ textAlign: "center", overflow: "hidden", width: "100%" }}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
       >
         <h1
           style={{
             fontFamily: "'Bebas Neue', sans-serif",
             fontSize: "clamp(5rem, 28vw, 22rem)",
             lineHeight: 0.82,
-            color: "#fff",
+            color: "#000",
             letterSpacing: "0.02em",
             whiteSpace: "nowrap",
           }}
@@ -41,35 +88,36 @@ export function HeroStatic() {
         </h1>
       </motion.div>
 
-      {/* Centered product image */}
+      {/* Hero product image */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
         style={{
-          width: "min(340px, 75vw)",
+          width: "min(300px, 60vw)",
           aspectRatio: "3/4",
           position: "relative",
-          margin: "24px 0",
+          margin: "16px 0",
           overflow: "hidden",
-          background: "#111",
+          scale: imageScale,
+          opacity: imageOpacity,
         }}
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
       >
         <Image
-          src="/products/gymkha_performance_compression_black_1.jpeg"
-          alt="PRISM INDIA"
+          src="/products/compression_half_black.png"
+          alt="PRISM INDIA Compression"
           fill
           priority
-          className="object-cover"
+          style={{ objectFit: "cover" }}
         />
       </motion.div>
 
-      {/* INDIA — outline text below image */}
+      {/* INDIA — outline */}
       <motion.div
+        style={{ textAlign: "center", width: "100%", y: indiaY }}
         initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-        style={{ textAlign: "center", overflow: "hidden", width: "100%" }}
+        transition={{ duration: 1, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
       >
         <h1
           style={{
@@ -77,7 +125,7 @@ export function HeroStatic() {
             fontSize: "clamp(5rem, 28vw, 22rem)",
             lineHeight: 0.82,
             color: "transparent",
-            WebkitTextStroke: "2px rgba(255,255,255,0.25)",
+            WebkitTextStroke: "2px rgba(0,0,0,0.85)",
             letterSpacing: "0.02em",
             whiteSpace: "nowrap",
           }}
@@ -86,41 +134,106 @@ export function HeroStatic() {
         </h1>
       </motion.div>
 
-      {/* Tagline + CTA */}
+      {/* Tagline + CTAs */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.45 }}
-        style={{ textAlign: "center", marginTop: 32 }}
+        transition={{ duration: 0.7, delay: 0.5, ease: [0.25, 0, 0, 1] }}
+        style={{ textAlign: "center", marginTop: 40, display: "flex", flexDirection: "column", alignItems: "center", gap: 24 }}
       >
         <p
           style={{
-            fontFamily: "Inter, sans-serif",
-            fontSize: "0.7rem",
-            letterSpacing: "0.3em",
-            color: "#888",
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: "0.62rem",
+            fontWeight: 500,
+            letterSpacing: "0.32em",
+            color: "#999",
             textTransform: "uppercase",
-            marginBottom: 24,
           }}
         >
-          STREETWEAR × GYM WEAR · MADE IN INDIA
+          GYM WEAR · MADE IN INDIA · SS 2025
         </p>
-        <Link
-          href="/catalog"
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+          <Link
+            href="/catalog"
+            style={{
+              display: "inline-block",
+              background: "#1a1a1a",
+              color: "#fff",
+              padding: "15px 40px",
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: "0.62rem",
+              fontWeight: 500,
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              textDecoration: "none",
+              transition: "background 0.2s",
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.background = "#000")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.background = "#1a1a1a")}
+          >
+            SHOP NOW
+          </Link>
+          <Link
+            href="/about"
+            style={{
+              display: "inline-block",
+              background: "transparent",
+              color: "#1a1a1a",
+              padding: "15px 40px",
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: "0.62rem",
+              fontWeight: 500,
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              textDecoration: "none",
+              border: "1px solid #d0d0d0",
+              transition: "border-color 0.2s",
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.borderColor = "#1a1a1a")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.borderColor = "#d0d0d0")}
+          >
+            OUR STORY
+          </Link>
+        </div>
+      </motion.div>
+
+      {/* Scroll indicator */}
+      <div
+        style={{
+          position: "absolute",
+          right: "clamp(1.5rem, 4vw, 3rem)",
+          bottom: 40,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 10,
+        }}
+      >
+        <span
           style={{
-            display: "inline-block",
-            background: "#ffffff",
-            color: "#0a0a0a",
-            padding: "15px 56px",
-            fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: "1.05rem",
-            letterSpacing: "0.25em",
-            textDecoration: "none",
+            writingMode: "vertical-rl",
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: "0.5rem",
+            fontWeight: 500,
+            letterSpacing: "0.3em",
+            color: "#999",
+            textTransform: "uppercase",
           }}
         >
-          SHOP NOW
-        </Link>
-      </motion.div>
+          SCROLL
+        </span>
+        <motion.div
+          animate={{ scaleY: [0, 1, 0] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
+          style={{
+            width: 1,
+            height: 48,
+            background: "#000",
+            transformOrigin: "top",
+          }}
+        />
+      </div>
     </section>
   );
 }

@@ -1,80 +1,91 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, User, X, Menu } from "lucide-react";
+import { ShoppingBag, Search, User, X, Menu } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { useSession } from "next-auth/react";
 
 const navLinks = [
-  { href: "/catalog", label: "CATALOG" },
+  { href: "/catalog?category=COMPRESSION", label: "COMPRESSION" },
+  { href: "/catalog?category=VESTS", label: "VESTS" },
+  { href: "/catalog", label: "ALL PRODUCTS" },
   { href: "/about", label: "ABOUT" },
 ];
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { getItemCount, openCart } = useCartStore();
   const { data: session } = useSession();
   const itemCount = getItemCount();
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
 
   return (
     <>
       <nav
         style={{
-          position: "fixed",
-          top: 0,
+          position: "sticky",
+          top: 36,
           left: 0,
           right: 0,
           zIndex: 50,
-          background: "transparent",
-          borderBottom: "none",
+          height: 64,
+          background: scrolled ? "rgba(255,255,255,0.97)" : "rgba(255,255,255,1)",
+          backdropFilter: scrolled ? "blur(12px)" : "none",
+          borderBottom: "2px solid #000",
+          transition: "background 0.2s, backdrop-filter 0.2s",
         }}
       >
         <div
           style={{
-            maxWidth: 1280,
+            maxWidth: 1320,
             margin: "0 auto",
-            padding: "0 clamp(1rem, 4vw, 2.5rem)",
-            height: 64,
+            padding: "0 clamp(1rem, 4vw, 3rem)",
+            height: "100%",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
           }}
         >
-          {/* Left — CATALOG link (desktop) + hamburger (mobile) */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 120 }}>
-            {/* Mobile hamburger */}
+          {/* Left — desktop nav links */}
+          <div style={{ display: "flex", alignItems: "center", gap: 32, flex: 1 }}>
             <button
               className="md:hidden"
               onClick={() => setMobileOpen(true)}
-              style={{ color: "#fff", background: "none", border: "none", cursor: "pointer", padding: 4 }}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#000", display: "flex", alignItems: "center" }}
             >
-              <Menu size={22} />
+              <Menu size={20} />
             </button>
-            {/* Desktop catalog link */}
-            <Link
-              href="/catalog"
-              className="hidden md:flex"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                color: "#fff",
-                textDecoration: "none",
-                fontFamily: "Inter, sans-serif",
-                fontSize: "0.7rem",
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                opacity: 0.85,
-              }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.opacity = "1")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.opacity = "0.85")}
-            >
-              <Menu size={16} />
-              CATALOG
-            </Link>
+            <div className="hidden md:flex" style={{ gap: 32 }}>
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: "0.65rem",
+                    fontWeight: 500,
+                    letterSpacing: "0.16em",
+                    textTransform: "uppercase",
+                    color: "#999",
+                    textDecoration: "none",
+                    transition: "color 0.2s",
+                  }}
+                  onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#000")}
+                  onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#999")}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* Center — Logo */}
@@ -86,27 +97,47 @@ export function Navbar() {
               transform: "translateX(-50%)",
               display: "flex",
               alignItems: "center",
+              gap: 10,
+              textDecoration: "none",
             }}
           >
             <Image
               src="/logo.svg"
               alt="PRISM INDIA"
-              width={52}
-              height={52}
+              width={24}
+              height={24}
               priority
-              className="invert"
-              style={{ height: 52, width: "auto" }}
+              style={{ height: 24, width: "auto" }}
             />
+            <span
+              style={{
+                fontFamily: "'Bebas Neue', sans-serif",
+                fontSize: "1.1rem",
+                letterSpacing: "0.22em",
+                color: "#000",
+                lineHeight: 1,
+              }}
+            >
+              PRISM INDIA
+            </span>
           </Link>
 
           {/* Right — icons */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16, minWidth: 120, justifyContent: "flex-end" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 20, flex: 1, justifyContent: "flex-end" }}>
+            <button
+              className="hidden md:flex"
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#888", display: "flex", transition: "color 0.2s" }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "#000")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "#888")}
+            >
+              <Search size={18} />
+            </button>
             <Link
               href={session ? "/account" : "/login"}
               className="hidden md:flex"
-              style={{ color: "rgba(255,255,255,0.85)", lineHeight: 1 }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#fff")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.85)")}
+              style={{ color: "#888", lineHeight: 1, transition: "color 0.2s" }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#000")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#888")}
             >
               <User size={18} />
             </Link>
@@ -114,39 +145,22 @@ export function Navbar() {
               onClick={openCart}
               style={{
                 position: "relative",
-                color: "rgba(255,255,255,0.85)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                padding: 0,
-                lineHeight: 1,
+                color: "#000",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: "0.65rem",
+                fontWeight: 500,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
               }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "#fff")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.85)")}
             >
               <ShoppingBag size={18} />
-              {itemCount > 0 && (
-                <span
-                  style={{
-                    position: "absolute",
-                    top: -6,
-                    right: -6,
-                    background: "#fff",
-                    color: "#0a0a0a",
-                    fontSize: 9,
-                    fontWeight: 700,
-                    borderRadius: "50%",
-                    width: 16,
-                    height: 16,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontFamily: "Inter, sans-serif",
-                  }}
-                >
-                  {itemCount > 9 ? "9+" : itemCount}
-                </span>
-              )}
+              <span>BAG ({itemCount})</span>
             </button>
           </div>
         </div>
@@ -159,7 +173,7 @@ export function Navbar() {
             style={{
               position: "fixed",
               inset: 0,
-              background: "#0a0a0a",
+              background: "#fff",
               zIndex: 100,
               display: "flex",
               flexDirection: "column",
@@ -168,61 +182,56 @@ export function Navbar() {
             initial={{ opacity: 0, x: "100%" }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: "100%" }}
-            transition={{ duration: 0.28, ease: "easeInOut" }}
+            transition={{ duration: 0.28, ease: [0.25, 0, 0, 1] }}
           >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 48 }}>
-              <Image src="/logo.svg" alt="PRISM" width={44} height={44} className="invert" style={{ height: 44, width: "auto" }} />
-              <button onClick={() => setMobileOpen(false)} style={{ color: "#fff", background: "none", border: "none", cursor: "pointer" }}>
-                <X size={24} />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 56, borderBottom: "2px solid #000", paddingBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <Image src="/logo.svg" alt="PRISM" width={24} height={24} style={{ height: 24, width: "auto" }} />
+                <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.1rem", letterSpacing: "0.22em", color: "#000" }}>
+                  PRISM INDIA
+                </span>
+              </div>
+              <button onClick={() => setMobileOpen(false)} style={{ color: "#000", background: "none", border: "none", cursor: "pointer" }}>
+                <X size={22} />
               </button>
             </div>
 
-            <nav style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <nav style={{ display: "flex", flexDirection: "column", gap: 0 }}>
               {navLinks.map((link, i) => (
                 <motion.div
                   key={link.href}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.08 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.06, ease: [0.25, 0, 0, 1] }}
+                  style={{ borderBottom: "1px solid #e8e8e8" }}
                 >
                   <Link
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
                     style={{
                       fontFamily: "'Bebas Neue', sans-serif",
-                      fontSize: "3.5rem",
-                      color: "#fff",
+                      fontSize: "3rem",
+                      color: "#000",
                       textDecoration: "none",
                       letterSpacing: "0.03em",
                       display: "block",
+                      padding: "12px 0",
                     }}
                   >
                     {link.label}
                   </Link>
                 </motion.div>
               ))}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}>
-                <Link
-                  href={session ? "/account" : "/login"}
-                  onClick={() => setMobileOpen(false)}
-                  style={{
-                    fontFamily: "'Bebas Neue', sans-serif",
-                    fontSize: "3.5rem",
-                    color: "#fff",
-                    textDecoration: "none",
-                    letterSpacing: "0.03em",
-                    display: "block",
-                  }}
-                >
-                  {session ? "ACCOUNT" : "LOGIN"}
-                </Link>
-              </motion.div>
             </nav>
 
-            <div style={{ marginTop: "auto", paddingTop: 24, borderTop: "1px solid #2a2a2a" }}>
-              <p style={{ color: "#888", fontSize: "0.75rem", fontFamily: "Inter, sans-serif", letterSpacing: "0.15em" }}>
-                @prismindia.in
-              </p>
+            <div style={{ marginTop: "auto", display: "flex", gap: 16 }}>
+              <Link
+                href={session ? "/account" : "/login"}
+                onClick={() => setMobileOpen(false)}
+                style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "#999", textDecoration: "none" }}
+              >
+                {session ? "ACCOUNT" : "LOGIN"}
+              </Link>
             </div>
           </motion.div>
         )}

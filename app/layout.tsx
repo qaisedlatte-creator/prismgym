@@ -12,8 +12,8 @@ export const metadata: Metadata = {
     default: "PRISM INDIA — Built Different",
     template: "%s | PRISM INDIA",
   },
-  description: "Streetwear × Gym Wear. Built Different. Forged in iron, worn on the streets.",
-  keywords: ["gym wear india", "streetwear india", "prism india", "gym clothes", "performance wear"],
+  description: "Premium gymwear engineered for the Indian athlete. Second-skin compression, ribbed vests, and performance basics. Made in India.",
+  keywords: ["gym wear india", "compression wear india", "prism india", "premium gym clothes", "athletic wear india"],
   metadataBase: new URL("https://prismindia.co"),
   openGraph: {
     type: "website",
@@ -21,13 +21,13 @@ export const metadata: Metadata = {
     url: "https://prismindia.co",
     siteName: "PRISM INDIA",
     title: "PRISM INDIA — Built Different",
-    description: "Streetwear × Gym Wear. Built Different.",
+    description: "Premium gymwear engineered for the Indian athlete.",
     images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "PRISM INDIA" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "PRISM INDIA — Built Different",
-    description: "Streetwear × Gym Wear. Built Different.",
+    description: "Premium gymwear engineered for the Indian athlete.",
   },
 };
 
@@ -38,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap"
           rel="stylesheet"
         />
       </head>

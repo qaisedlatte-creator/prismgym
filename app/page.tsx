@@ -1,45 +1,24 @@
 import { HeroStatic } from "@/components/home/HeroStatic";
-import { AboutSection } from "@/components/home/AboutSection";
-import { BestsellerRow } from "@/components/home/BestsellerRow";
-import { ProductGridSection } from "@/components/home/ProductGridSection";
-import { WhatIsPrism } from "@/components/home/WhatIsPrism";
-import { WhyPrism } from "@/components/home/WhyPrism";
-import { AdvantagesFaq } from "@/components/home/AdvantagesFaq";
-import { NewDropBanner } from "@/components/home/NewDropBanner";
-import { HowToOrder } from "@/components/home/HowToOrder";
-import { PRODUCTS } from "@/lib/products";
-
-const bestsellers = PRODUCTS.filter((p) => p.images.length > 0);
+import { MarqueeStrip } from "@/components/home/MarqueeStrip";
+import { NewArrivals } from "@/components/home/NewArrivals";
+import { FeatureStrip } from "@/components/home/FeatureStrip";
+import { CategoryTiles } from "@/components/home/CategoryTiles";
+import { Bestsellers } from "@/components/home/Bestsellers";
+import { ManifestoSection } from "@/components/home/ManifestoSection";
+import { Newsletter } from "@/components/home/Newsletter";
+import { NEW_ARRIVALS, BESTSELLERS } from "@/lib/products";
 
 export default function HomePage() {
   return (
     <>
-      {/* S1 — Static hero with giant PRISM text + product image */}
       <HeroStatic />
-
-      {/* S2 — About the brand */}
-      <AboutSection />
-
-      {/* S3 — Bestseller horizontal scroll row */}
-      <BestsellerRow products={bestsellers} />
-
-      {/* S4 — Full product grid with filters + CTA banner */}
-      <ProductGridSection products={PRODUCTS} />
-
-      {/* S5 — What is PRISM? (3-col philosophy) */}
-      <WhatIsPrism />
-
-      {/* S6 — Why PRISM? (bullet list + CTA) */}
-      <WhyPrism />
-
-      {/* S7 — Advantages + FAQ accordion */}
-      <AdvantagesFaq />
-
-      {/* S8 — New drop / coming soon banner */}
-      <NewDropBanner />
-
-      {/* S9 — How to order (4 numbered steps) */}
-      <HowToOrder />
+      <MarqueeStrip />
+      <NewArrivals products={NEW_ARRIVALS} />
+      <FeatureStrip />
+      <CategoryTiles />
+      <Bestsellers products={BESTSELLERS} />
+      <ManifestoSection />
+      <Newsletter />
     </>
   );
 }
