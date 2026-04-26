@@ -18,7 +18,7 @@ interface Product {
   color?: string;
 }
 
-const FILTER_PILLS = ["ALL", "VESTS", "COMPRESSION", "ACCESSORIES"];
+const FILTER_PILLS = ["ALL", "VESTS", "COMPRESSION"];
 
 export function CatalogClient({ products }: { products: Product[] }) {
   const [activeFilter, setActiveFilter] = useState("ALL");
@@ -29,47 +29,60 @@ export function CatalogClient({ products }: { products: Product[] }) {
   }, [products, activeFilter]);
 
   return (
-    <div className="min-h-screen pt-28 pb-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+    <div style={{ minHeight: "100vh", paddingTop: 100, paddingBottom: 80, background: "#fff" }}>
+      <div style={{ maxWidth: 1320, margin: "0 auto", padding: "0 clamp(1rem, 4vw, 3rem)" }}>
         {/* Header */}
-        <div className="mb-10">
+        <div style={{ marginBottom: 40 }}>
           <motion.p
-            className="text-[#888888] text-xs tracking-[0.3em] uppercase mb-2"
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: "0.6rem",
+              fontWeight: 500,
+              letterSpacing: "0.28em",
+              textTransform: "uppercase",
+              color: "#888",
+              marginBottom: 8,
+            }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
             PRISM INDIA
           </motion.p>
           <motion.h1
-            style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(3rem, 8vw, 7rem)", lineHeight: 0.9 }}
-            className="text-white"
+            style={{
+              fontFamily: "'Bebas Neue', sans-serif",
+              fontSize: "clamp(3rem, 8vw, 6rem)",
+              lineHeight: 0.9,
+              color: "#000",
+              letterSpacing: "0.02em",
+            }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.08 }}
           >
             ALL PRODUCTS
           </motion.h1>
         </div>
 
         {/* Pill filters */}
-        <div className="flex flex-wrap gap-3 mb-10">
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 40 }}>
           {FILTER_PILLS.map((pill) => (
             <button
               key={pill}
               onClick={() => setActiveFilter(pill)}
               style={{
-                background: activeFilter === pill ? "#ffffff" : "transparent",
-                color: activeFilter === pill ? "#0a0a0a" : "#ffffff",
-                border: "1px solid",
-                borderColor: activeFilter === pill ? "#ffffff" : "#2a2a2a",
-                borderRadius: "999px",
-                padding: "6px 18px",
-                fontSize: "0.75rem",
+                background: activeFilter === pill ? "#000" : "transparent",
+                color: activeFilter === pill ? "#fff" : "#000",
+                border: `1px solid ${activeFilter === pill ? "#000" : "#d0d0d0"}`,
+                borderRadius: 0,
+                padding: "8px 20px",
+                fontSize: "0.62rem",
                 letterSpacing: "0.15em",
-                fontFamily: "Inter, sans-serif",
+                fontFamily: "'DM Sans', sans-serif",
                 fontWeight: 500,
                 cursor: "pointer",
-                transition: "all 0.2s ease",
+                textTransform: "uppercase",
+                transition: "all 0.18s",
               }}
             >
               {pill}
@@ -79,17 +92,26 @@ export function CatalogClient({ products }: { products: Product[] }) {
 
         {/* Product grid */}
         {filtered.length === 0 ? (
-          <div className="text-center py-24">
-            <p className="text-[#888888] text-sm">No products in this category.</p>
+          <div style={{ textAlign: "center", paddingTop: 80 }}>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", color: "#999", fontSize: "0.9rem" }}>
+              No products in this category.
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: "clamp(1.5rem, 3vw, 2rem) clamp(1rem, 2vw, 1.5rem)",
+            }}
+            className="grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
+          >
             {filtered.map((product, i) => (
               <motion.div
                 key={product.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05, duration: 0.4 }}
+                transition={{ delay: i * 0.04, duration: 0.4, ease: [0.25, 0, 0, 1] }}
               >
                 <ProductCard product={product} />
               </motion.div>

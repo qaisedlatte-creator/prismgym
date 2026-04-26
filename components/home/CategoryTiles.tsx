@@ -156,12 +156,11 @@ export function CategoryTiles() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1.4fr 1fr 1fr",
-            gridTemplateRows: "auto auto",
+            gridTemplateColumns: "1.4fr 1fr",
+            gridTemplateRows: "1fr 1fr",
             gap: 2,
             background: "#000",
           }}
-          className="grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr]"
         >
           <CategoryTile cat={categories[0]} rowSpan index={0} />
           <CategoryTile cat={categories[1]} index={1} />

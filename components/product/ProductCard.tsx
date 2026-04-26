@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Bookmark, Ruler } from "lucide-react";
+import { Ruler } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/lib/store";
 import { useToast } from "@/components/ui/toaster";
@@ -24,15 +24,15 @@ interface Product {
 
 const COLOR_MAP: Record<string, string> = {
   Black: "#1a1a1a",
-  White: "#f5f5f5",
+  White: "#f0f0f0",
   Grey: "#888888",
   Gray: "#888888",
   Brown: "#7c5c3e",
   Charcoal: "#3a3a3a",
+  Maroon: "#6B2737",
 };
 
 export function ProductCard({ product }: { product: Product }) {
-  const [imgIndex, setImgIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [showSizes, setShowSizes] = useState(false);
   const { addItem } = useCartStore();
@@ -60,7 +60,7 @@ export function ProductCard({ product }: { product: Product }) {
       quantity: 1,
       slug: product.slug,
     });
-    toast({ title: "Added to cart", description: `${product.name} · ${selectedSize}`, variant: "success" });
+    toast({ title: "Added to bag", description: `${product.name} · ${selectedSize}`, variant: "success" });
     setShowSizes(false);
     setSelectedSize("");
   };
@@ -69,28 +69,44 @@ export function ProductCard({ product }: { product: Product }) {
     <Link
       href={`/product/${product.slug}`}
       className="block group"
-      style={{ borderRadius: "16px", overflow: "hidden", background: "#111111" }}
+      style={{ textDecoration: "none", display: "block" }}
     >
-      {/* Image container */}
-      <div className="relative" style={{ aspectRatio: "3/4" }}>
+      {/* Image */}
+      <div
+        style={{
+          position: "relative",
+          aspectRatio: "3/4",
+          background: "#f4f4f4",
+          border: "1px solid #e8e8e8",
+          overflow: "hidden",
+          transition: "border-color 0.2s",
+        }}
+        onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.borderColor = "#cccccc")}
+        onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.borderColor = "#e8e8e8")}
+      >
         {hasImage ? (
           <Image
-            src={product.images[imgIndex] || product.images[0]}
+            src={product.images[0]}
             alt={product.name}
             fill
-            className="object-cover"
-            style={{ transition: "transform 400ms ease", transform: "scale(1)" }}
+            style={{ objectFit: "cover" }}
           />
         ) : (
           <div
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ background: "#181818" }}
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#f4f4f4",
+            }}
           >
             <span
               style={{
                 fontFamily: "'Bebas Neue', sans-serif",
-                fontSize: "1rem",
-                color: "#3a3a3a",
+                fontSize: "0.85rem",
+                color: "#ccc",
                 letterSpacing: "0.1em",
                 textAlign: "center",
                 padding: "0 1rem",
@@ -101,41 +117,21 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
         )}
 
-        {/* Bookmark button */}
-        <button
-          onClick={(e) => e.preventDefault()}
-          style={{
-            position: "absolute",
-            top: 10,
-            right: 10,
-            background: "rgba(20,20,20,0.7)",
-            border: "none",
-            borderRadius: "8px",
-            padding: "6px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            backdropFilter: "blur(4px)",
-          }}
-        >
-          <Bookmark size={14} color="#ffffff" />
-        </button>
-
         {/* NEW badge */}
         {product.isNew && !isSoldOut && (
           <div
             style={{
               position: "absolute",
-              top: 10,
-              left: 10,
-              background: "#E8C547",
-              color: "#0a0a0a",
-              fontSize: "0.6rem",
-              fontWeight: 700,
-              letterSpacing: "0.15em",
-              padding: "3px 8px",
-              borderRadius: "4px",
+              top: 12,
+              left: 12,
+              background: "#000",
+              color: "#fff",
+              fontSize: "0.5rem",
+              fontFamily: "'DM Sans', sans-serif",
+              fontWeight: 500,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              padding: "4px 10px",
             }}
           >
             NEW
@@ -143,127 +139,107 @@ export function ProductCard({ product }: { product: Product }) {
         )}
 
         {isSoldOut && (
-          <div className="absolute inset-0 bg-[#0a0a0a]/70 flex items-center justify-center" style={{ borderRadius: "16px" }}>
-            <span style={{ fontFamily: "'Bebas Neue', sans-serif", color: "#fff", letterSpacing: "0.3em" }}>SOLD OUT</span>
-          </div>
-        )}
-
-        {/* Thumbnail swatches row — bottom of image */}
-        {hasImage && product.images.length > 1 && (
           <div
             style={{
               position: "absolute",
-              bottom: 10,
-              left: 10,
+              inset: 0,
+              background: "rgba(255,255,255,0.75)",
               display: "flex",
-              gap: 4,
+              alignItems: "center",
+              justifyContent: "center",
             }}
-            onClick={(e) => e.preventDefault()}
           >
-            {product.images.slice(0, 3).map((img, i) => (
-              <button
-                key={i}
-                onMouseEnter={() => setImgIndex(i)}
-                onMouseLeave={() => setImgIndex(0)}
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 6,
-                  overflow: "hidden",
-                  border: imgIndex === i ? "2px solid #fff" : "2px solid rgba(255,255,255,0.3)",
-                  position: "relative",
-                  flexShrink: 0,
-                  padding: 0,
-                  cursor: "pointer",
-                  background: "#222",
-                }}
-              >
-                <Image src={img} alt="" fill className="object-cover" />
-              </button>
-            ))}
+            <span style={{ fontFamily: "'Bebas Neue', sans-serif", color: "#000", letterSpacing: "0.3em", fontSize: "0.85rem" }}>
+              SOLD OUT
+            </span>
           </div>
         )}
       </div>
 
       {/* Card info */}
-      <div style={{ padding: "12px 12px 14px" }}>
-        {/* Product name — gymkha yellow */}
+      <div style={{ padding: "14px 0 0" }}>
+        {/* Category */}
+        <p
+          style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: "0.58rem",
+            fontWeight: 500,
+            letterSpacing: "0.15em",
+            textTransform: "uppercase",
+            color: "#666",
+            marginBottom: 4,
+          }}
+        >
+          {product.category}
+          {colorLabel && (
+            <span style={{ color: "#999" }}> · {colorLabel}</span>
+          )}
+        </p>
+
+        {/* Name */}
         <h3
           style={{
-            fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: "0.95rem",
-            letterSpacing: "0.06em",
-            color: "#E8C547",
-            marginBottom: 4,
-            lineHeight: 1.1,
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: "0.875rem",
+            fontWeight: 400,
+            color: "#000",
+            marginBottom: 6,
+            lineHeight: 1.3,
           }}
         >
           {product.name}
         </h3>
 
-        {/* Price row */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-          <span style={{ color: "#fff", fontFamily: "Inter, sans-serif", fontSize: "0.85rem", fontWeight: 600 }}>
+        {/* Price + color dots row */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.875rem", fontWeight: 500, color: "#000" }}>
             {formatPrice(product.price)}
           </span>
-        </div>
-
-        {/* Color dots + Size Guide row */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            {product.colors.map((c) => (
+          <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+            {product.colors.slice(0, 4).map((c) => (
               <span
                 key={c}
                 title={c}
                 style={{
-                  width: 14,
-                  height: 14,
+                  width: 12,
+                  height: 12,
                   borderRadius: "50%",
                   background: COLOR_MAP[c] || "#888",
-                  border: c === "White" ? "1px solid #555" : "none",
+                  border: c === "White" ? "1px solid #ccc" : "1px solid transparent",
                   display: "inline-block",
                   flexShrink: 0,
                 }}
               />
             ))}
-            {colorLabel && (
-              <span style={{ color: "#888", fontSize: "0.7rem", fontFamily: "Inter, sans-serif" }}>
-                {colorLabel}
-              </span>
-            )}
           </div>
-          <span style={{ display: "flex", alignItems: "center", gap: 3, color: "#888", fontSize: "0.65rem", fontFamily: "Inter, sans-serif" }}>
-            <Ruler size={10} />
-            Size Guide
-          </span>
         </div>
 
-        {/* Size selector — appears on hover/click */}
+        {/* Size selector — expands */}
         {!isSoldOut && (
           <div
             style={{
-              marginTop: 10,
               overflow: "hidden",
-              maxHeight: showSizes ? 80 : 0,
-              transition: "max-height 0.25s ease",
+              maxHeight: showSizes ? 96 : 0,
+              transition: "max-height 0.25s cubic-bezier(0.25,0,0,1)",
             }}
             onClick={(e) => e.preventDefault()}
           >
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
               {product.sizes.map((size) => (
                 <button
                   key={size}
                   onClick={(e) => { e.preventDefault(); setSelectedSize(size); }}
                   style={{
-                    fontSize: "0.65rem",
-                    padding: "3px 8px",
-                    border: selectedSize === size ? "1px solid #fff" : "1px solid #333",
-                    background: selectedSize === size ? "#fff" : "transparent",
-                    color: selectedSize === size ? "#0a0a0a" : "#888",
-                    borderRadius: 4,
+                    fontSize: "0.6rem",
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontWeight: 500,
+                    letterSpacing: "0.08em",
+                    padding: "5px 10px",
+                    border: selectedSize === size ? "1px solid #000" : "1px solid #e0e0e0",
+                    background: selectedSize === size ? "#000" : "transparent",
+                    color: selectedSize === size ? "#fff" : "#666",
                     cursor: "pointer",
                     transition: "all 0.15s",
-                    fontFamily: "Inter, sans-serif",
                   }}
                 >
                   {size}
@@ -274,55 +250,60 @@ export function ProductCard({ product }: { product: Product }) {
               onClick={handleAddToCart}
               style={{
                 width: "100%",
-                padding: "7px 0",
-                background: "#E8C547",
-                color: "#0a0a0a",
-                fontSize: "0.7rem",
-                fontWeight: 700,
-                letterSpacing: "0.15em",
-                fontFamily: "Inter, sans-serif",
+                padding: "10px 0",
+                background: "#1a1a1a",
+                color: "#fff",
+                fontSize: "0.6rem",
+                fontWeight: 500,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                fontFamily: "'DM Sans', sans-serif",
                 border: "none",
-                borderRadius: 6,
                 cursor: "pointer",
+                transition: "background 0.18s",
               }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#000")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#1a1a1a")}
             >
-              ADD TO CART
+              ADD TO BAG
             </button>
           </div>
         )}
 
-        {/* "Select a Size" CTA — shows when sizes hidden */}
-        {!isSoldOut && !showSizes && (
+        {/* "Select a Size" toggle */}
+        {!isSoldOut && (
           <button
-            onClick={(e) => { e.preventDefault(); setShowSizes(true); }}
+            onClick={(e) => { e.preventDefault(); setShowSizes(!showSizes); }}
             style={{
-              marginTop: 10,
               width: "100%",
-              padding: "7px 0",
+              padding: "8px 0",
               background: "transparent",
-              border: "1px solid #2a2a2a",
+              border: "1px solid #e0e0e0",
               color: "#888",
-              fontSize: "0.7rem",
+              fontSize: "0.6rem",
               letterSpacing: "0.1em",
-              fontFamily: "Inter, sans-serif",
-              borderRadius: 6,
+              textTransform: "uppercase",
+              fontFamily: "'DM Sans', sans-serif",
+              fontWeight: 500,
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: 6,
-              transition: "border-color 0.2s, color 0.2s",
+              transition: "border-color 0.18s, color 0.18s",
+              marginTop: showSizes ? 0 : 0,
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "#555";
-              (e.currentTarget as HTMLButtonElement).style.color = "#fff";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "#1a1a1a";
+              (e.currentTarget as HTMLButtonElement).style.color = "#000";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "#2a2a2a";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "#e0e0e0";
               (e.currentTarget as HTMLButtonElement).style.color = "#888";
             }}
           >
-            Select a Size
+            <Ruler size={10} />
+            {showSizes ? "CLOSE" : "SELECT SIZE"}
           </button>
         )}
       </div>

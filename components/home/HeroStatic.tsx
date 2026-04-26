@@ -6,196 +6,177 @@ import Link from "next/link";
 import Image from "next/image";
 
 export function HeroStatic() {
-  const containerRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"],
-  });
-
-  const prismY = useTransform(scrollYProgress, [0, 1], ["0%", "-18%"]);
-  const indiaY = useTransform(scrollYProgress, [0, 1], ["0%", "12%"]);
-  const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
-  const imageOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "25%"]);
+  const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
 
   return (
     <section
-      ref={containerRef}
+      ref={ref}
       style={{
-        minHeight: "92vh",
-        background: "#fff",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
         position: "relative",
+        height: "100dvh",
+        minHeight: 600,
         overflow: "hidden",
-        borderBottom: "2px solid #000",
-        paddingTop: 80,
-        paddingBottom: 64,
+        background: "#0a0a0a",
       }}
     >
-      {/* Subtle grid lines */}
+      {/* Full-bleed background image */}
+      <motion.div style={{ position: "absolute", inset: 0, scale: imageScale }}>
+        <Image
+          src="/products/compression_half_black.png"
+          alt="PRISM INDIA"
+          fill
+          priority
+          style={{ objectFit: "cover", objectPosition: "center top" }}
+        />
+      </motion.div>
+
+      {/* Gradient overlay — dark at bottom for text */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          backgroundImage:
-            "linear-gradient(#00000009 1px, transparent 1px), linear-gradient(90deg, #00000009 1px, transparent 1px)",
-          backgroundSize: "96px 96px",
-          pointerEvents: "none",
+          background:
+            "linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.75) 75%, rgba(0,0,0,0.92) 100%)",
         }}
       />
 
-      {/* Logo watermark */}
-      <div
+      {/* Content — bottom left */}
+      <motion.div
         style={{
           position: "absolute",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          pointerEvents: "none",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: "0 clamp(1.5rem, 5vw, 4rem) clamp(2.5rem, 6vh, 4.5rem)",
+          y: textY,
         }}
       >
-        <Image
-          src="/logo.svg"
-          alt=""
-          width={520}
-          height={520}
-          aria-hidden
-          style={{ opacity: 0.035, width: "min(520px, 70vw)", height: "auto" }}
-        />
-      </div>
-
-      {/* PRISM */}
-      <motion.div
-        style={{ textAlign: "center", width: "100%", y: prismY }}
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <h1
-          style={{
-            fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: "clamp(5rem, 28vw, 22rem)",
-            lineHeight: 0.82,
-            color: "#000",
-            letterSpacing: "0.02em",
-            whiteSpace: "nowrap",
-          }}
-        >
-          PRISM
-        </h1>
-      </motion.div>
-
-      {/* Hero product image */}
-      <motion.div
-        style={{
-          width: "min(300px, 60vw)",
-          aspectRatio: "3/4",
-          position: "relative",
-          margin: "16px 0",
-          overflow: "hidden",
-          scale: imageScale,
-          opacity: imageOpacity,
-        }}
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <Image
-          src="/products/compression_half_black.png"
-          alt="PRISM INDIA Compression"
-          fill
-          priority
-          style={{ objectFit: "cover" }}
-        />
-      </motion.div>
-
-      {/* INDIA — outline */}
-      <motion.div
-        style={{ textAlign: "center", width: "100%", y: indiaY }}
-        initial={{ opacity: 0, y: -40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <h1
-          style={{
-            fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: "clamp(5rem, 28vw, 22rem)",
-            lineHeight: 0.82,
-            color: "transparent",
-            WebkitTextStroke: "2px rgba(0,0,0,0.85)",
-            letterSpacing: "0.02em",
-            whiteSpace: "nowrap",
-          }}
-        >
-          INDIA
-        </h1>
-      </motion.div>
-
-      {/* Tagline + CTAs */}
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.5, ease: [0.25, 0, 0, 1] }}
-        style={{ textAlign: "center", marginTop: 40, display: "flex", flexDirection: "column", alignItems: "center", gap: 24 }}
-      >
-        <p
+        {/* Eyebrow */}
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0, 0, 1] }}
           style={{
             fontFamily: "'DM Sans', sans-serif",
-            fontSize: "0.62rem",
+            fontSize: "0.6rem",
             fontWeight: 500,
             letterSpacing: "0.32em",
-            color: "#999",
             textTransform: "uppercase",
+            color: "rgba(255,255,255,0.55)",
+            marginBottom: 16,
           }}
         >
           GYM WEAR · MADE IN INDIA · SS 2025
-        </p>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-          <Link
-            href="/catalog"
+        </motion.p>
+
+        {/* Headline */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <h1
             style={{
-              display: "inline-block",
-              background: "#1a1a1a",
+              fontFamily: "'Bebas Neue', sans-serif",
+              fontSize: "clamp(4.5rem, 14vw, 11rem)",
+              lineHeight: 0.88,
               color: "#fff",
-              padding: "15px 40px",
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: "0.62rem",
-              fontWeight: 500,
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              textDecoration: "none",
-              transition: "background 0.2s",
+              letterSpacing: "0.02em",
+              margin: 0,
             }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.background = "#000")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.background = "#1a1a1a")}
           >
-            SHOP NOW
-          </Link>
-          <Link
-            href="/about"
+            BUILT
+          </h1>
+          <h1
             style={{
-              display: "inline-block",
-              background: "transparent",
-              color: "#1a1a1a",
-              padding: "15px 40px",
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: "0.62rem",
-              fontWeight: 500,
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              textDecoration: "none",
-              border: "1px solid #d0d0d0",
-              transition: "border-color 0.2s",
+              fontFamily: "'Bebas Neue', sans-serif",
+              fontSize: "clamp(4.5rem, 14vw, 11rem)",
+              lineHeight: 0.88,
+              color: "transparent",
+              WebkitTextStroke: "2px rgba(255,255,255,0.85)",
+              letterSpacing: "0.02em",
+              margin: 0,
             }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.borderColor = "#1a1a1a")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.borderColor = "#d0d0d0")}
           >
-            OUR STORY
-          </Link>
-        </div>
+            DIFFERENT.
+          </h1>
+        </motion.div>
+
+        {/* Sub + CTAs */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.45, ease: [0.25, 0, 0, 1] }}
+          style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 24 }}
+        >
+          <p
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: "0.85rem",
+              fontWeight: 300,
+              color: "rgba(255,255,255,0.6)",
+              maxWidth: 340,
+              lineHeight: 1.6,
+            }}
+          >
+            Precision-built for the Indian athlete. Second-skin compression. Made in India.
+          </p>
+
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <Link
+              href="/catalog"
+              style={{
+                display: "inline-block",
+                background: "#fff",
+                color: "#000",
+                padding: "14px 40px",
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: "0.62rem",
+                fontWeight: 500,
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                textDecoration: "none",
+                transition: "background 0.2s, color 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.background = "#f0f0f0";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.background = "#fff";
+              }}
+            >
+              SHOP NOW
+            </Link>
+            <Link
+              href="/about"
+              style={{
+                display: "inline-block",
+                background: "transparent",
+                color: "#fff",
+                padding: "14px 40px",
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: "0.62rem",
+                fontWeight: 500,
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                textDecoration: "none",
+                border: "1px solid rgba(255,255,255,0.4)",
+                transition: "border-color 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.borderColor = "#fff";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,255,255,0.4)";
+              }}
+            >
+              OUR STORY
+            </Link>
+          </div>
+        </motion.div>
       </motion.div>
 
       {/* Scroll indicator */}
@@ -203,7 +184,7 @@ export function HeroStatic() {
         style={{
           position: "absolute",
           right: "clamp(1.5rem, 4vw, 3rem)",
-          bottom: 40,
+          bottom: "clamp(2.5rem, 6vh, 4.5rem)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -214,10 +195,10 @@ export function HeroStatic() {
           style={{
             writingMode: "vertical-rl",
             fontFamily: "'DM Sans', sans-serif",
-            fontSize: "0.5rem",
+            fontSize: "0.48rem",
             fontWeight: 500,
             letterSpacing: "0.3em",
-            color: "#999",
+            color: "rgba(255,255,255,0.45)",
             textTransform: "uppercase",
           }}
         >
@@ -226,12 +207,7 @@ export function HeroStatic() {
         <motion.div
           animate={{ scaleY: [0, 1, 0] }}
           transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
-          style={{
-            width: 1,
-            height: 48,
-            background: "#000",
-            transformOrigin: "top",
-          }}
+          style={{ width: 1, height: 48, background: "rgba(255,255,255,0.5)", transformOrigin: "top" }}
         />
       </div>
     </section>
