@@ -47,7 +47,7 @@ export default function RegisterPage() {
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="text-center mb-10">
-          <Image src="/logo.svg" alt="PRISM" width={40} height={40} className="invert mx-auto mb-4" />
+          <Image src="/logo-mark.png" alt="PRISM" width={40} height={40} className="invert mx-auto mb-4" />
           <h1
             className="text-white tracking-widest"
             style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "2.5rem" }}

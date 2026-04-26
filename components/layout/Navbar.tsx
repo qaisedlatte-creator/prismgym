@@ -73,7 +73,7 @@ export function Navbar() {
               style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", flexShrink: 0 }}
             >
               <Image
-                src="/logo-new.png"
+                src="/logo-mark.png"
                 alt="PRISM INDIA"
                 width={32}
                 height={32}
@@ -187,7 +187,7 @@ export function Navbar() {
             {/* Header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, borderBottom: "1px solid #e8e8e8" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <Image src="/logo-new.png" alt="PRISM" width={28} height={28} style={{ height: 28, width: "auto", mixBlendMode: "multiply" }} />
+                <Image src="/logo-mark.png" alt="PRISM" width={28} height={28} style={{ height: 28, width: "auto", mixBlendMode: "multiply" }} />
                 <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.1rem", letterSpacing: "0.22em", color: "#000" }}>
                   PRISM INDIA
                 </span>

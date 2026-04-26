@@ -84,15 +84,15 @@ export function ProductDetailClient({ product, related }: { product: Product; re
   };
 
   return (
-    <div className="min-h-screen pt-28 pb-24">
+    <div className="min-h-screen pt-28 pb-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-[#888888] text-xs tracking-wide mb-8">
-          <Link href="/" className="hover:text-white transition-colors">Home</Link>
+          <Link href="/" className="hover:text-black transition-colors">Home</Link>
           <span>/</span>
-          <Link href="/catalog" className="hover:text-white transition-colors">Catalog</Link>
+          <Link href="/catalog" className="hover:text-black transition-colors">Catalog</Link>
           <span>/</span>
-          <span className="text-white">{product.name}</span>
+          <span style={{ color: "#000" }}>{product.name}</span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
@@ -129,7 +129,7 @@ export function ProductDetailClient({ product, related }: { product: Product; re
                 </div>
               )}
               {product.isNew && (
-                <div className="absolute top-4 left-4 bg-white text-[#0a0a0a] text-[10px] font-bold tracking-[0.2em] px-2 py-1">
+                <div className="absolute top-4 left-4 bg-black text-white text-[10px] font-bold tracking-[0.2em] px-2 py-1">
                   NEW
                 </div>
               )}
@@ -142,7 +142,7 @@ export function ProductDetailClient({ product, related }: { product: Product; re
                     key={i}
                     onClick={() => setSelectedImage(i)}
                     className={`relative w-16 h-20 overflow-hidden border transition-colors ${
-                      selectedImage === i ? "border-white" : "border-[#2a2a2a] hover:border-[#888888]"
+                      selectedImage === i ? "border-black" : "border-[#e8e8e8] hover:border-[#888888]"
                     }`}
                   >
                     <Image src={img} alt="" fill className="object-cover" />
@@ -157,23 +157,23 @@ export function ProductDetailClient({ product, related }: { product: Product; re
             <p className="text-[#888888] text-xs tracking-[0.3em] uppercase mb-3">{product.category}</p>
             <h1
               style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2.5rem, 5vw, 4rem)", lineHeight: 0.95 }}
-              className="text-white mb-4"
+              className="text-black mb-4"
             >
               {product.name}
             </h1>
 
-            <p className="text-white text-2xl font-medium mb-4">{formatPrice(product.price)}</p>
+            <p className="text-black text-2xl font-medium mb-4">{formatPrice(product.price)}</p>
 
             {/* COD Badge */}
-            <div className="inline-flex items-center gap-2 border border-[#2a2a2a] px-3 py-1.5 text-xs text-white mb-8">
-              Cash on Delivery · <span className="text-[#888888]">+₹100</span>
+            <div className="inline-flex items-center gap-2 border border-[#e8e8e8] px-3 py-1.5 text-xs text-white mb-8">
+              Cash on Delivery · <span className="text-[#666]">+₹100</span>
             </div>
 
             {/* Color */}
             {product.colors.length > 0 && (
               <div className="mb-6">
-                <p className="text-white text-xs tracking-[0.2em] uppercase mb-3">
-                  COLOR: <span className="text-[#888888]">{selectedColor}</span>
+                <p className="text-black text-xs tracking-[0.2em] uppercase mb-3">
+                  COLOR: <span className="text-[#666]">{selectedColor}</span>
                 </p>
                 <div className="flex gap-2">
                   {product.colors.map((color) => (
@@ -182,8 +182,8 @@ export function ProductDetailClient({ product, related }: { product: Product; re
                       onClick={() => setSelectedColor(color)}
                       className={`px-4 py-2 text-xs border transition-colors ${
                         selectedColor === color
-                          ? "bg-white text-[#0a0a0a] border-white"
-                          : "border-[#2a2a2a] text-[#888888] hover:border-white hover:text-white"
+                          ? "bg-black text-white border-black"
+                          : "border-[#e8e8e8] text-[#888888] hover:border-black hover:text-black"
                       }`}
                     >
                       {color}
@@ -196,12 +196,12 @@ export function ProductDetailClient({ product, related }: { product: Product; re
             {/* Size */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-white text-xs tracking-[0.2em] uppercase">
-                  SIZE: <span className="text-[#888888]">{selectedSize || "Select"}</span>
+                <p className="text-black text-xs tracking-[0.2em] uppercase">
+                  SIZE: <span className="text-[#666]">{selectedSize || "Select"}</span>
                 </p>
                 <button
                   onClick={() => setSizeGuideOpen(true)}
-                  className="text-[#888888] hover:text-white text-xs underline underline-offset-4 transition-colors"
+                  className="text-[#888888] hover:text-black text-xs underline underline-offset-4 transition-colors"
                 >
                   Size Guide
                 </button>
@@ -214,8 +214,8 @@ export function ProductDetailClient({ product, related }: { product: Product; re
                     disabled={isSoldOut}
                     className={`w-14 py-2.5 text-xs border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                       selectedSize === size
-                        ? "bg-white text-[#0a0a0a] border-white"
-                        : "border-[#2a2a2a] text-[#888888] hover:border-white hover:text-white"
+                        ? "bg-black text-white border-black"
+                        : "border-[#e8e8e8] text-[#888888] hover:border-black hover:text-black"
                     }`}
                   >
                     {size}
@@ -226,17 +226,17 @@ export function ProductDetailClient({ product, related }: { product: Product; re
 
             {/* Quantity */}
             <div className="flex items-center gap-4 mb-6">
-              <div className="flex items-center border border-[#2a2a2a]">
+              <div className="flex items-center border border-[#e8e8e8]">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-4 py-3 text-[#888888] hover:text-white transition-colors text-lg"
+                  className="px-4 py-3 text-[#888888] hover:text-black transition-colors text-lg"
                 >
                   −
                 </button>
-                <span className="px-4 text-white font-medium min-w-[3rem] text-center">{quantity}</span>
+                <span className="px-4 text-[#000] font-medium min-w-[3rem] text-center">{quantity}</span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
-                  className="px-4 py-3 text-[#888888] hover:text-white transition-colors text-lg"
+                  className="px-4 py-3 text-[#888888] hover:text-black transition-colors text-lg"
                 >
                   +
                 </button>
@@ -248,7 +248,7 @@ export function ProductDetailClient({ product, related }: { product: Product; re
               <button
                 onClick={handleAddToCart}
                 disabled={isSoldOut}
-                className="flex-1 bg-white text-[#0a0a0a] py-4 text-sm font-bold tracking-[0.2em] uppercase hover:bg-[#c0c0c0] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-black text-white py-4 text-sm font-bold tracking-[0.2em] uppercase hover:bg-[#c0c0c0] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ShoppingBag size={16} />
                 {isSoldOut ? "SOLD OUT" : "ADD TO CART"}
@@ -256,7 +256,7 @@ export function ProductDetailClient({ product, related }: { product: Product; re
               {!isSoldOut && (
                 <button
                   onClick={handleBuyNow}
-                  className="flex-1 border border-white text-white py-4 text-sm font-bold tracking-[0.2em] uppercase hover:bg-white hover:text-[#0a0a0a] transition-colors"
+                  className="flex-1 border border-black text-white py-4 text-sm font-bold tracking-[0.2em] uppercase hover:bg-white hover:text-[#0a0a0a] transition-colors"
                 >
                   BUY NOW
                 </button>
@@ -264,7 +264,7 @@ export function ProductDetailClient({ product, related }: { product: Product; re
             </div>
 
             {/* Shipping info */}
-            <div className="border border-[#2a2a2a] p-4 space-y-2 mb-8 text-xs text-[#888888]">
+            <div className="border border-[#e8e8e8] p-4 space-y-2 mb-8 text-xs text-[#666]">
               <div>🚚 Free shipping on orders above ₹999</div>
               <div>📦 Estimated delivery: 5-7 business days</div>
               <div>↩️ Easy returns within 7 days</div>
@@ -276,13 +276,13 @@ export function ProductDetailClient({ product, related }: { product: Product; re
               { key: "care", title: "CARE INSTRUCTIONS", content: "Machine wash cold at 30°C. Do not tumble dry. Do not iron on print. Wash inside out." },
               { key: "fabric", title: "FABRIC & FIT", content: "88% Polyester, 12% Elastane. Four-way stretch. Quick-dry moisture wicking. Pre-shrunk." },
             ].map(({ key, title, content }) => (
-              <div key={key} className="border-t border-[#2a2a2a]">
+              <div key={key} className="border-t border-[#e8e8e8]">
                 <button
                   onClick={() => setAccordionOpen(accordionOpen === key ? null : key)}
                   className="w-full flex items-center justify-between py-4 text-left"
                 >
                   <span
-                    className="text-white text-xs tracking-[0.2em] uppercase"
+                    className="text-black text-xs tracking-[0.2em] uppercase"
                     style={{ fontFamily: "'Bebas Neue', sans-serif" }}
                   >
                     {title}
@@ -315,7 +315,7 @@ export function ProductDetailClient({ product, related }: { product: Product; re
           <div className="mt-24">
             <h2
               style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2rem, 5vw, 4rem)", lineHeight: 1 }}
-              className="text-white tracking-wide mb-8"
+              className="text-black tracking-wide mb-8"
             >
               YOU MIGHT ALSO LIKE
             </h2>
@@ -338,25 +338,25 @@ export function ProductDetailClient({ product, related }: { product: Product; re
               onClick={() => setSizeGuideOpen(false)}
             />
             <motion.div
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#0a0a0a] border border-[#2a2a2a] p-8 z-50 w-full max-w-md mx-4"
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#0a0a0a] border border-[#e8e8e8] p-8 z-50 w-full max-w-md mx-4"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
             >
               <div className="flex items-center justify-between mb-8">
                 <h2
-                  className="text-white tracking-widest"
+                  className="text-black tracking-widest"
                   style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.5rem" }}
                 >
                   SIZE GUIDE
                 </h2>
-                <button onClick={() => setSizeGuideOpen(false)} className="text-[#888888] hover:text-white transition-colors">
+                <button onClick={() => setSizeGuideOpen(false)} className="text-[#888888] hover:text-black transition-colors">
                   <X size={20} />
                 </button>
               </div>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[#2a2a2a]">
+                  <tr className="border-b border-[#e8e8e8]">
                     <th className="text-left text-[#888888] text-xs tracking-[0.2em] pb-3 uppercase">Size</th>
                     <th className="text-left text-[#888888] text-xs tracking-[0.2em] pb-3 uppercase">Chest (cm)</th>
                     <th className="text-left text-[#888888] text-xs tracking-[0.2em] pb-3 uppercase">Waist (cm)</th>
@@ -365,11 +365,11 @@ export function ProductDetailClient({ product, related }: { product: Product; re
                 <tbody>
                   {SIZE_GUIDE.map((row) => (
                     <tr key={row.size} className="border-b border-[#111111]">
-                      <td className={`py-3 font-medium ${selectedSize === row.size ? "text-white" : "text-[#888888]"}`}>
+                      <td className={`py-3 font-medium ${selectedSize === row.size ? "text-white" : "text-[#666]"}`}>
                         {row.size}
                       </td>
-                      <td className="py-3 text-[#888888]">{row.chest}</td>
-                      <td className="py-3 text-[#888888]">{row.waist}</td>
+                      <td className="py-3 text-[#666]">{row.chest}</td>
+                      <td className="py-3 text-[#666]">{row.waist}</td>
                     </tr>
                   ))}
                 </tbody>

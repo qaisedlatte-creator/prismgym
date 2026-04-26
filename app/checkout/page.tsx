@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/store";
-import { formatPrice, calculateShipping, COD_FEE, FREE_SHIPPING_THRESHOLD } from "@/lib/utils";
+import { formatPrice, calculateShipping, COD_FEE } from "@/lib/utils";
 import { useToast } from "@/components/ui/toaster";
 import { Check, CreditCard, Truck, ClipboardList } from "lucide-react";
 
@@ -13,26 +14,45 @@ type Step = 1 | 2 | 3;
 type PaymentMethod = "online" | "cod";
 
 interface AddressForm {
-  name: string;
-  email: string;
-  phone: string;
-  line1: string;
-  line2: string;
-  city: string;
-  state: string;
-  pincode: string;
+  name: string; email: string; phone: string;
+  line1: string; line2: string; city: string; state: string; pincode: string;
 }
 
-const initialAddress: AddressForm = {
-  name: "", email: "", phone: "", line1: "", line2: "",
-  city: "", state: "", pincode: "",
-};
+const initialAddress: AddressForm = { name: "", email: "", phone: "", line1: "", line2: "", city: "", state: "", pincode: "" };
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
+// ── InputField defined OUTSIDE component to prevent focus loss on re-render ──
+function InputField({ label, value, onChange, type = "text", placeholder }: {
+  label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string;
+}) {
+  return (
+    <div>
+      <label style={{ display: "block", color: "#666", fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 8, fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
+        {label}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        style={{
+          width: "100%",
+          background: "#f8f8f8",
+          border: "1px solid #e0e0e0",
+          color: "#000",
+          fontSize: "0.875rem",
+          padding: "12px 14px",
+          outline: "none",
+          fontFamily: "'DM Sans', sans-serif",
+          transition: "border-color 0.18s",
+        }}
+        onFocus={(e) => (e.target.style.borderColor = "#000")}
+        onBlur={(e) => (e.target.style.borderColor = "#e0e0e0")}
+      />
+    </div>
+  );
 }
+
+declare global { interface Window { Razorpay: any; } }
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -42,100 +62,71 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState<AddressForm>(initialAddress);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("online");
   const [loading, setLoading] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
   const subtotal = getSubtotal();
   const shipping = calculateShipping(subtotal);
   const codFee = paymentMethod === "cod" ? COD_FEE : 0;
   const total = subtotal + shipping + codFee;
 
-  if (items.length === 0) {
-    router.push("/catalog");
-    return null;
-  }
+  const set = (field: keyof AddressForm) => (v: string) => setAddress((a) => ({ ...a, [field]: v }));
+
+  if (items.length === 0) { router.push("/catalog"); return null; }
 
   const validateAddress = () => {
     const required: (keyof AddressForm)[] = ["name", "email", "phone", "line1", "city", "state", "pincode"];
-    for (const field of required) {
-      if (!address[field].trim()) {
-        toast({ title: `Please fill in your ${field}`, variant: "error" });
-        return false;
-      }
+    for (const f of required) {
+      if (!address[f].trim()) { toast({ title: `Please fill in your ${f}`, variant: "error" }); return false; }
     }
-    if (!/^\d{10}$/.test(address.phone)) {
-      toast({ title: "Enter a valid 10-digit phone number", variant: "error" });
-      return false;
-    }
-    if (!/^\d{6}$/.test(address.pincode)) {
-      toast({ title: "Enter a valid 6-digit pincode", variant: "error" });
-      return false;
-    }
+    if (!/^\d{10}$/.test(address.phone)) { toast({ title: "Enter a valid 10-digit phone number", variant: "error" }); return false; }
+    if (!/^\d{6}$/.test(address.pincode)) { toast({ title: "Enter a valid 6-digit pincode", variant: "error" }); return false; }
     return true;
   };
 
   const handlePlaceOrder = async () => {
+    if (!agreed) { toast({ title: "Please accept the Terms & Conditions", variant: "error" }); return; }
     setLoading(true);
     try {
       if (paymentMethod === "cod") {
         const res = await fetch("/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            items, address, paymentMethod: "cod",
-            subtotal, shippingFee: shipping, codFee: COD_FEE, total,
-          }),
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items, address, paymentMethod: "cod", subtotal, shippingFee: shipping, codFee: COD_FEE, total }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Order failed");
-        clearCart();
-        router.push(`/order/${data.id}`);
+        clearCart(); router.push(`/order/${data.id}`);
       } else {
-        // Create Razorpay order
         const res = await fetch("/api/razorpay/create-order", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ amount: total }),
         });
         const { orderId, keyId } = await res.json();
-
-        // Load Razorpay script
         if (!window.Razorpay) {
           await new Promise<void>((resolve) => {
-            const script = document.createElement("script");
-            script.src = "https://checkout.razorpay.com/v1/checkout.js";
-            script.onload = () => resolve();
-            document.body.appendChild(script);
+            const s = document.createElement("script");
+            s.src = "https://checkout.razorpay.com/v1/checkout.js";
+            s.onload = () => resolve();
+            document.body.appendChild(s);
           });
         }
-
         const rzp = new window.Razorpay({
-          key: keyId,
-          amount: total * 100,
-          currency: "INR",
-          name: "PRISM INDIA",
-          description: `Order — ${items.length} item(s)`,
+          key: keyId, amount: total * 100, currency: "INR",
+          name: "PRISM INDIA", description: `Order — ${items.length} item(s)`,
           order_id: orderId,
           prefill: { name: address.name, email: address.email, contact: address.phone },
-          theme: { color: "#ffffff" },
+          theme: { color: "#000000" },
           handler: async (response: any) => {
             const verifyRes = await fetch("/api/razorpay/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpayOrderId: response.razorpay_order_id,
-                razorpayPaymentId: response.razorpay_payment_id,
-                razorpaySignature: response.razorpay_signature,
-                items, address, subtotal, shippingFee: shipping, codFee: 0, total,
-              }),
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ razorpayOrderId: response.razorpay_order_id, razorpayPaymentId: response.razorpay_payment_id, razorpaySignature: response.razorpay_signature, items, address, subtotal, shippingFee: shipping, codFee: 0, total }),
             });
             const data = await verifyRes.json();
             if (!verifyRes.ok) throw new Error(data.error);
-            clearCart();
-            router.push(`/order/${data.id}`);
+            clearCart(); router.push(`/order/${data.id}`);
           },
           modal: { ondismiss: () => setLoading(false) },
         });
-        rzp.open();
-        return;
+        rzp.open(); return;
       }
     } catch (err: any) {
       toast({ title: "Something went wrong", description: err.message, variant: "error" });
@@ -143,236 +134,161 @@ export default function CheckoutPage() {
     setLoading(false);
   };
 
-  const InputField = ({ label, field, type = "text", placeholder }: {
-    label: string; field: keyof AddressForm; type?: string; placeholder?: string;
-  }) => (
-    <div>
-      <label className="block text-[#888888] text-xs tracking-[0.2em] uppercase mb-2">{label}</label>
-      <input
-        type={type}
-        value={address[field]}
-        onChange={(e) => setAddress({ ...address, [field]: e.target.value })}
-        placeholder={placeholder}
-        className="w-full bg-[#1a1a1a] border border-[#2e2e2e] text-white text-sm px-4 py-3 focus:outline-none focus:border-white transition-colors rounded-sm"
-      />
-    </div>
-  );
-
   const steps = [
     { num: 1, label: "Address", icon: Truck },
     { num: 2, label: "Payment", icon: CreditCard },
     { num: 3, label: "Review", icon: ClipboardList },
   ];
 
+  const lbl = "text-[#000] text-xs tracking-[0.1em] uppercase";
+  const card = "bg-[#f8f8f8] border border-[#e8e8e8]";
+
   return (
-    <div className="min-h-screen pt-28 pb-24">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+    <div style={{ minHeight: "100vh", paddingTop: 100, paddingBottom: 80, background: "#fff" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 clamp(1rem, 4vw, 2rem)" }}>
         <motion.h1
-          style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2.5rem, 6vw, 5rem)", lineHeight: 0.9 }}
-          className="text-white mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2.5rem, 6vw, 4.5rem)", lineHeight: 0.9, color: "#000", marginBottom: 40 }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         >
           CHECKOUT
         </motion.h1>
 
-        {/* Step indicators */}
-        <div className="flex items-center gap-0 mb-12 max-w-sm">
+        {/* Steps */}
+        <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 48, maxWidth: 360 }}>
           {steps.map((s, i) => (
-            <div key={s.num} className="flex items-center flex-1">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors border ${
-                step > s.num ? "bg-white text-[#0a0a0a] border-white" :
-                step === s.num ? "border-white text-white" :
-                "border-[#2e2e2e] text-[#888888]"
-              }`}>
+            <div key={s.num} style={{ display: "flex", alignItems: "center", flex: 1 }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "0.7rem", fontWeight: 700, border: "1px solid",
+                background: step > s.num ? "#000" : "transparent",
+                borderColor: step >= s.num ? "#000" : "#ccc",
+                color: step > s.num ? "#fff" : step === s.num ? "#000" : "#bbb",
+                fontFamily: "'DM Sans', sans-serif",
+              }}>
                 {step > s.num ? <Check size={14} /> : s.num}
               </div>
-              <span className={`ml-2 text-xs tracking-[0.1em] uppercase hidden sm:block ${step >= s.num ? "text-white" : "text-[#888888]"}`}>
+              <span style={{ marginLeft: 8, fontSize: "0.6rem", letterSpacing: "0.12em", textTransform: "uppercase", color: step >= s.num ? "#000" : "#bbb", fontFamily: "'DM Sans', sans-serif" }}>
                 {s.label}
               </span>
-              {i < steps.length - 1 && (
-                <div className={`flex-1 h-px mx-4 ${step > s.num ? "bg-white" : "bg-[#2e2e2e]"}`} />
-              )}
+              {i < steps.length - 1 && <div style={{ flex: 1, height: 1, background: step > s.num ? "#000" : "#e0e0e0", margin: "0 12px" }} />}
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 48, alignItems: "start" }} className="grid-cols-1 lg:grid-cols-[1fr_340px]">
           {/* Main */}
-          <div className="lg:col-span-2">
+          <div>
             <AnimatePresence mode="wait">
-              {/* Step 1: Address */}
               {step === 1 && (
-                <motion.div
-                  key="step1"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                >
-                  <h2 className="text-white tracking-widest mb-8" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.5rem" }}>
-                    SHIPPING ADDRESS
-                  </h2>
-                  <div className="space-y-5">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      <InputField label="Full Name" field="name" placeholder="John Doe" />
-                      <InputField label="Email" field="email" type="email" placeholder="john@example.com" />
+                <motion.div key="step1" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}>
+                  <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.4rem", color: "#000", letterSpacing: "0.05em", marginBottom: 24 }}>SHIPPING ADDRESS</h2>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                      <InputField label="Full Name" value={address.name} onChange={set("name")} placeholder="Rahul Sharma" />
+                      <InputField label="Email" value={address.email} onChange={set("email")} type="email" placeholder="rahul@email.com" />
                     </div>
-                    <InputField label="Phone" field="phone" type="tel" placeholder="9876543210" />
-                    <InputField label="Address Line 1" field="line1" placeholder="Flat/House No., Building, Street" />
-                    <InputField label="Address Line 2 (Optional)" field="line2" placeholder="Area, Landmark" />
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                      <InputField label="City" field="city" placeholder="Mumbai" />
-                      <InputField label="State" field="state" placeholder="Maharashtra" />
-                      <InputField label="Pincode" field="pincode" placeholder="400001" />
+                    <InputField label="Phone" value={address.phone} onChange={set("phone")} type="tel" placeholder="9876543210" />
+                    <InputField label="Address Line 1" value={address.line1} onChange={set("line1")} placeholder="Flat/House No., Building, Street" />
+                    <InputField label="Address Line 2 (Optional)" value={address.line2} onChange={set("line2")} placeholder="Area, Landmark" />
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+                      <InputField label="City" value={address.city} onChange={set("city")} placeholder="Kochi" />
+                      <InputField label="State" value={address.state} onChange={set("state")} placeholder="Kerala" />
+                      <InputField label="Pincode" value={address.pincode} onChange={set("pincode")} placeholder="682001" />
                     </div>
                   </div>
                   <button
                     onClick={() => { if (validateAddress()) setStep(2); }}
-                    className="mt-8 w-full bg-white text-[#0a0a0a] py-4 text-sm font-bold tracking-[0.2em] uppercase hover:bg-[#c0c0c0] transition-colors"
+                    style={{ marginTop: 28, width: "100%", background: "#000", color: "#fff", padding: "14px 0", fontFamily: "'DM Sans', sans-serif", fontSize: "0.65rem", fontWeight: 500, letterSpacing: "0.2em", textTransform: "uppercase", border: "none", cursor: "pointer" }}
                   >
                     CONTINUE TO PAYMENT
                   </button>
                 </motion.div>
               )}
 
-              {/* Step 2: Payment */}
               {step === 2 && (
-                <motion.div
-                  key="step2"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                >
-                  <h2 className="text-white tracking-widest mb-8" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.5rem" }}>
-                    PAYMENT METHOD
-                  </h2>
-                  <div className="space-y-4">
-                    {/* Online payment */}
-                    <label className={`flex items-start gap-4 p-5 border cursor-pointer transition-colors rounded-sm ${
-                      paymentMethod === "online" ? "border-white bg-[#1a1a1a]" : "border-[#2e2e2e] hover:border-[#888888]"
-                    }`}>
-                      <input
-                        type="radio"
-                        checked={paymentMethod === "online"}
-                        onChange={() => setPaymentMethod("online")}
-                        className="sr-only"
-                      />
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                        paymentMethod === "online" ? "border-white" : "border-[#2e2e2e]"
-                      }`}>
-                        {paymentMethod === "online" && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
-                      </div>
-                      <div>
-                        <p className="text-white font-medium text-sm">Pay Online</p>
-                        <p className="text-[#888888] text-xs mt-1">UPI · Cards · Net Banking · Wallets via Razorpay</p>
-                        <p className="text-[#888888] text-xs mt-0.5">🔒 100% secure payments</p>
-                      </div>
-                    </label>
-
-                    {/* COD */}
-                    <label className={`flex items-start gap-4 p-5 border cursor-pointer transition-colors rounded-sm ${
-                      paymentMethod === "cod" ? "border-white bg-[#1a1a1a]" : "border-[#2e2e2e] hover:border-[#888888]"
-                    }`}>
-                      <input
-                        type="radio"
-                        checked={paymentMethod === "cod"}
-                        onChange={() => setPaymentMethod("cod")}
-                        className="sr-only"
-                      />
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                        paymentMethod === "cod" ? "border-white" : "border-[#2e2e2e]"
-                      }`}>
-                        {paymentMethod === "cod" && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
-                      </div>
-                      <div>
-                        <p className="text-white font-medium text-sm">Cash on Delivery</p>
-                        <p className="text-[#888888] text-xs mt-1">Pay when your order arrives</p>
-                        <p className="text-white text-xs mt-1 font-medium">+₹100 COD handling fee applied</p>
-                      </div>
-                    </label>
+                <motion.div key="step2" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}>
+                  <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.4rem", color: "#000", marginBottom: 24 }}>PAYMENT METHOD</h2>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {([
+                      { val: "online" as PaymentMethod, title: "Pay Online", desc: "UPI · Cards · Net Banking via Razorpay", sub: "🔒 100% secure" },
+                      { val: "cod" as PaymentMethod, title: "Cash on Delivery", desc: "Pay when your order arrives", sub: "+₹100 COD handling fee" },
+                    ] as const).map(({ val, title, desc, sub }) => (
+                      <label key={val} onClick={() => setPaymentMethod(val)} style={{ display: "flex", alignItems: "flex-start", gap: 16, padding: 20, border: `1px solid ${paymentMethod === val ? "#000" : "#e0e0e0"}`, background: paymentMethod === val ? "#f8f8f8" : "#fff", cursor: "pointer" }}>
+                        <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${paymentMethod === val ? "#000" : "#ccc"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+                          {paymentMethod === val && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#000" }} />}
+                        </div>
+                        <div>
+                          <p style={{ color: "#000", fontSize: "0.875rem", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>{title}</p>
+                          <p style={{ color: "#888", fontSize: "0.75rem", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>{desc}</p>
+                          <p style={{ color: "#666", fontSize: "0.72rem", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>{sub}</p>
+                        </div>
+                      </label>
+                    ))}
                   </div>
-
-                  <div className="flex gap-4 mt-8">
-                    <button
-                      onClick={() => setStep(1)}
-                      className="flex-1 border border-[#2e2e2e] text-[#888888] py-4 text-sm tracking-[0.2em] uppercase hover:border-white hover:text-white transition-colors"
-                    >
-                      BACK
-                    </button>
-                    <button
-                      onClick={() => setStep(3)}
-                      className="flex-1 bg-white text-[#0a0a0a] py-4 text-sm font-bold tracking-[0.2em] uppercase hover:bg-[#c0c0c0] transition-colors"
-                    >
-                      REVIEW ORDER
-                    </button>
+                  <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
+                    <button onClick={() => setStep(1)} style={{ flex: 1, border: "1px solid #e0e0e0", color: "#666", padding: "13px 0", fontFamily: "'DM Sans', sans-serif", fontSize: "0.65rem", letterSpacing: "0.15em", textTransform: "uppercase", background: "transparent", cursor: "pointer" }}>BACK</button>
+                    <button onClick={() => setStep(3)} style={{ flex: 2, background: "#000", color: "#fff", padding: "13px 0", fontFamily: "'DM Sans', sans-serif", fontSize: "0.65rem", fontWeight: 500, letterSpacing: "0.2em", textTransform: "uppercase", border: "none", cursor: "pointer" }}>REVIEW ORDER</button>
                   </div>
                 </motion.div>
               )}
 
-              {/* Step 3: Review */}
               {step === 3 && (
-                <motion.div
-                  key="step3"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                >
-                  <h2 className="text-white tracking-widest mb-8" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.5rem" }}>
-                    REVIEW YOUR ORDER
-                  </h2>
-
-                  {/* Address summary */}
-                  <div className="bg-[#1a1a1a] border border-[#2e2e2e] rounded-sm p-5 mb-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-white text-xs tracking-[0.2em] uppercase">Delivering to</h3>
-                      <button onClick={() => setStep(1)} className="text-[#888888] hover:text-white text-xs underline underline-offset-4 transition-colors">Edit</button>
+                <motion.div key="step3" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}>
+                  <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.4rem", color: "#000", marginBottom: 24 }}>REVIEW YOUR ORDER</h2>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
+                    <div style={{ border: "1px solid #e8e8e8", padding: 16, background: "#f8f8f8" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                        <span style={{ fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "#666", fontFamily: "'DM Sans', sans-serif" }}>Delivering to</span>
+                        <button onClick={() => setStep(1)} style={{ fontSize: "0.65rem", color: "#888", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Edit</button>
+                      </div>
+                      <p style={{ color: "#000", fontSize: "0.875rem", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>{address.name}</p>
+                      <p style={{ color: "#666", fontSize: "0.8rem", fontFamily: "'DM Sans', sans-serif" }}>{address.line1}{address.line2 ? `, ${address.line2}` : ""}</p>
+                      <p style={{ color: "#666", fontSize: "0.8rem", fontFamily: "'DM Sans', sans-serif" }}>{address.city}, {address.state} — {address.pincode}</p>
+                      <p style={{ color: "#666", fontSize: "0.8rem", fontFamily: "'DM Sans', sans-serif" }}>{address.phone}</p>
                     </div>
-                    <p className="text-white text-sm font-medium">{address.name}</p>
-                    <p className="text-[#888888] text-sm">{address.line1}{address.line2 ? `, ${address.line2}` : ""}</p>
-                    <p className="text-[#888888] text-sm">{address.city}, {address.state} — {address.pincode}</p>
-                    <p className="text-[#888888] text-sm">{address.phone}</p>
-                  </div>
-
-                  {/* Payment summary */}
-                  <div className="bg-[#1a1a1a] border border-[#2e2e2e] rounded-sm p-5 mb-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-white text-xs tracking-[0.2em] uppercase">Payment</h3>
-                      <button onClick={() => setStep(2)} className="text-[#888888] hover:text-white text-xs underline underline-offset-4 transition-colors">Edit</button>
+                    <div style={{ border: "1px solid #e8e8e8", padding: 16, background: "#f8f8f8" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                        <span style={{ fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "#666", fontFamily: "'DM Sans', sans-serif" }}>Payment</span>
+                        <button onClick={() => setStep(2)} style={{ fontSize: "0.65rem", color: "#888", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Edit</button>
+                      </div>
+                      <p style={{ color: "#000", fontSize: "0.875rem", fontFamily: "'DM Sans', sans-serif" }}>{paymentMethod === "cod" ? "Cash on Delivery (+₹100)" : "Online Payment via Razorpay"}</p>
                     </div>
-                    <p className="text-white text-sm">{paymentMethod === "cod" ? "Cash on Delivery (+₹100)" : "Online Payment via Razorpay"}</p>
-                  </div>
-
-                  {/* Items */}
-                  <div className="bg-[#1a1a1a] border border-[#2e2e2e] rounded-sm p-5 mb-8">
-                    <h3 className="text-white text-xs tracking-[0.2em] uppercase mb-4">Items ({items.length})</h3>
-                    <div className="space-y-4">
+                    <div style={{ border: "1px solid #e8e8e8", padding: 16, background: "#f8f8f8" }}>
+                      <p style={{ fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "#666", fontFamily: "'DM Sans', sans-serif", marginBottom: 12 }}>Items ({items.length})</p>
                       {items.map((item) => (
-                        <div key={`${item.productId}-${item.size}`} className="flex items-center gap-3">
-                          <div className="relative w-12 h-14 bg-[#2e2e2e] rounded-sm overflow-hidden flex-shrink-0">
-                            <Image src={item.image} alt={item.name} fill className="object-cover" />
+                        <div key={`${item.productId}-${item.size}`} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                          <div style={{ position: "relative", width: 44, height: 52, background: "#e8e8e8", overflow: "hidden", flexShrink: 0 }}>
+                            <Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }} />
                           </div>
-                          <div className="flex-1">
-                            <p className="text-white text-sm">{item.name}</p>
-                            <p className="text-[#888888] text-xs">{item.size} · {item.color} · ×{item.quantity}</p>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ color: "#000", fontSize: "0.8rem", fontFamily: "'DM Sans', sans-serif" }}>{item.name}</p>
+                            <p style={{ color: "#888", fontSize: "0.7rem", fontFamily: "'DM Sans', sans-serif" }}>{item.size} · {item.color} · ×{item.quantity}</p>
                           </div>
-                          <span className="text-white text-sm">{formatPrice(item.price * item.quantity)}</span>
+                          <span style={{ color: "#000", fontSize: "0.8rem", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>{formatPrice(item.price * item.quantity)}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => setStep(2)}
-                      className="flex-1 border border-[#2e2e2e] text-[#888888] py-4 text-sm tracking-[0.2em] uppercase hover:border-white hover:text-white transition-colors"
-                    >
-                      BACK
-                    </button>
-                    <button
-                      onClick={handlePlaceOrder}
-                      disabled={loading}
-                      className="flex-1 bg-white text-[#0a0a0a] py-4 text-sm font-bold tracking-[0.2em] uppercase hover:bg-[#c0c0c0] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
+                  {/* Terms & Conditions */}
+                  <div style={{ border: "1px solid #e8e8e8", padding: 20, background: "#f8f8f8", marginBottom: 20 }}>
+                    <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1rem", color: "#000", marginBottom: 10, letterSpacing: "0.05em" }}>TERMS & CONDITIONS</p>
+                    <div style={{ maxHeight: 120, overflowY: "auto", marginBottom: 14 }}>
+                      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", color: "#666", lineHeight: 1.7 }}>
+                        By placing this order you agree to our Terms of Service and Privacy Policy. Orders are processed within 1–2 business days. Delivery takes 5–7 business days across India. Returns are accepted within 7 days of delivery for unused items in original packaging. COD orders carry a ₹100 handling fee. Razorpay processes all online payments securely — PRISM INDIA does not store your card details. For queries contact us at support@prismindia.co or on Instagram @prismindia.in.
+                      </p>
+                    </div>
+                    <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                      <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} style={{ width: 16, height: 16, accentColor: "#000" }} />
+                      <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", color: "#000" }}>
+                        I have read and agree to the <Link href="/terms" style={{ color: "#000", textDecoration: "underline" }}>Terms & Conditions</Link>
+                      </span>
+                    </label>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 12 }}>
+                    <button onClick={() => setStep(2)} style={{ flex: 1, border: "1px solid #e0e0e0", color: "#666", padding: "13px 0", fontFamily: "'DM Sans', sans-serif", fontSize: "0.65rem", letterSpacing: "0.15em", textTransform: "uppercase", background: "transparent", cursor: "pointer" }}>BACK</button>
+                    <button onClick={handlePlaceOrder} disabled={loading} style={{ flex: 2, background: loading ? "#666" : "#000", color: "#fff", padding: "13px 0", fontFamily: "'DM Sans', sans-serif", fontSize: "0.65rem", fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", border: "none", cursor: loading ? "not-allowed" : "pointer" }}>
                       {loading ? "PLACING ORDER..." : `PLACE ORDER — ${formatPrice(total)}`}
                     </button>
                   </div>
@@ -381,48 +297,38 @@ export default function CheckoutPage() {
             </AnimatePresence>
           </div>
 
-          {/* Order Summary sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-[#1a1a1a] border border-[#2e2e2e] rounded-sm p-6 sticky top-28">
-              <h3 className="text-white tracking-widest mb-5" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1rem" }}>
-                ORDER SUMMARY
-              </h3>
-              <div className="space-y-3 mb-5">
-                {items.map((item) => (
-                  <div key={`${item.productId}-${item.size}`} className="flex items-center gap-3">
-                    <div className="relative w-10 h-12 bg-[#2e2e2e] rounded-sm overflow-hidden flex-shrink-0">
-                      <Image src={item.image} alt={item.name} fill className="object-cover" />
-                      <span className="absolute -top-1 -right-1 bg-white text-[#0a0a0a] text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                        {item.quantity}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-xs truncate">{item.name}</p>
-                      <p className="text-[#888888] text-[10px]">{item.size}</p>
-                    </div>
-                    <span className="text-white text-xs">{formatPrice(item.price * item.quantity)}</span>
+          {/* Sidebar */}
+          <div style={{ border: "1px solid #e8e8e8", padding: 24, position: "sticky", top: 120, background: "#f8f8f8" }}>
+            <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1rem", color: "#000", letterSpacing: "0.08em", marginBottom: 20 }}>ORDER SUMMARY</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+              {items.map((item) => (
+                <div key={`${item.productId}-${item.size}`} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ position: "relative", width: 36, height: 44, background: "#e8e8e8", overflow: "hidden", flexShrink: 0 }}>
+                    <Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }} />
+                    <span style={{ position: "absolute", top: -4, right: -4, background: "#000", color: "#fff", fontSize: 8, fontWeight: 700, borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>{item.quantity}</span>
                   </div>
-                ))}
-              </div>
-              <div className="border-t border-[#2e2e2e] pt-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#888888]">Subtotal</span>
-                  <span className="text-white">{formatPrice(subtotal)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#888888]">Shipping</span>
-                  <span className="text-white">{shipping === 0 ? "FREE" : formatPrice(shipping)}</span>
-                </div>
-                {paymentMethod === "cod" && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[#888888]">COD Fee</span>
-                    <span className="text-white">+{formatPrice(COD_FEE)}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ color: "#000", fontSize: "0.72rem", fontFamily: "'DM Sans', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</p>
+                    <p style={{ color: "#888", fontSize: "0.65rem", fontFamily: "'DM Sans', sans-serif" }}>{item.size}</p>
                   </div>
-                )}
-                <div className="border-t border-[#2e2e2e] pt-3 flex justify-between font-medium">
-                  <span className="text-white">Total</span>
-                  <span className="text-white">{formatPrice(total)}</span>
+                  <span style={{ color: "#000", fontSize: "0.72rem", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>{formatPrice(item.price * item.quantity)}</span>
                 </div>
+              ))}
+            </div>
+            <div style={{ borderTop: "1px solid #e0e0e0", paddingTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+              {[
+                { label: "Subtotal", val: formatPrice(subtotal) },
+                { label: "Shipping", val: shipping === 0 ? "FREE" : formatPrice(shipping) },
+                ...(paymentMethod === "cod" ? [{ label: "COD Fee", val: `+${formatPrice(COD_FEE)}` }] : []),
+              ].map(({ label, val }) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "#888", fontSize: "0.8rem", fontFamily: "'DM Sans', sans-serif" }}>{label}</span>
+                  <span style={{ color: "#000", fontSize: "0.8rem", fontFamily: "'DM Sans', sans-serif" }}>{val}</span>
+                </div>
+              ))}
+              <div style={{ borderTop: "1px solid #e0e0e0", paddingTop: 10, display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#000", fontSize: "0.875rem", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>Total</span>
+                <span style={{ color: "#000", fontSize: "0.875rem", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>{formatPrice(total)}</span>
               </div>
             </div>
           </div>

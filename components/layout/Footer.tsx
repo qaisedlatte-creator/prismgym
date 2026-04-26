@@ -45,7 +45,7 @@ export function Footer() {
           {/* Brand column */}
           <div>
             <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 16 }}>
-              <Image src="/logo-new.png" alt="PRISM INDIA" width={28} height={28} style={{ height: 28, width: "auto", mixBlendMode: "multiply" }} />
+              <Image src="/logo-mark.png" alt="PRISM INDIA" width={28} height={28} style={{ height: 28, width: "auto", mixBlendMode: "multiply" }} />
               <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.2rem", letterSpacing: "0.22em", color: "#000" }}>
                 PRISM INDIA
               </span>

@@ -68,7 +68,7 @@ function CategoryTile({ cat, rowSpan = false, index = 0 }: { cat: typeof categor
 
         {/* Logo watermark */}
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-          <Image src="/logo.svg" alt="" width={48} height={48} style={{ opacity: 0.07, width: 48, height: "auto" }} aria-hidden />
+          <Image src="/logo-mark.png" alt="" width={48} height={48} style={{ opacity: 0.07, width: 48, height: "auto" }} aria-hidden />
         </div>
 
         {/* Overlay gradient + text */}

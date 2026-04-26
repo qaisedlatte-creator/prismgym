@@ -12,10 +12,15 @@ async function getProducts() {
 
 export const metadata = {
   title: "Catalog",
-  description: "Shop all PRISM INDIA gym wear — Vests, Compression, Accessories.",
+  description: "Shop all PRISM INDIA gym wear — Vests, Compression.",
 };
 
-export default async function CatalogPage() {
+export default async function CatalogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
+  const { category } = await searchParams;
   const products = await getProducts();
-  return <CatalogClient products={products} />;
+  return <CatalogClient products={products} initialCategory={category?.toUpperCase() || "ALL"} />;
 }

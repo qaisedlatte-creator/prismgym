@@ -20,8 +20,8 @@ interface Product {
 
 const FILTER_PILLS = ["ALL", "VESTS", "COMPRESSION"];
 
-export function CatalogClient({ products }: { products: Product[] }) {
-  const [activeFilter, setActiveFilter] = useState("ALL");
+export function CatalogClient({ products, initialCategory = "ALL" }: { products: Product[]; initialCategory?: string }) {
+  const [activeFilter, setActiveFilter] = useState(initialCategory);
 
   const filtered = useMemo(() => {
     if (activeFilter === "ALL") return products;

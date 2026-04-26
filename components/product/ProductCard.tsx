@@ -89,7 +89,7 @@ export function ProductCard({ product }: { product: Product }) {
             src={product.images[0]}
             alt={product.name}
             fill
-            style={{ objectFit: "cover" }}
+            style={{ objectFit: "cover", objectPosition: "50% 8%" }}
           />
         ) : (
           <div
