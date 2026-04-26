@@ -45,7 +45,7 @@ export function Footer() {
           {/* Brand column */}
           <div>
             <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 16 }}>
-              <Image src="/logo-mark.png" alt="PRISM INDIA" width={28} height={28} style={{ height: 28, width: "auto", mixBlendMode: "multiply" }} />
+              <Image src="/logo-mark.png" alt="PRISM INDIA" width={40} height={40} style={{ height: 40, width: "auto" }} />
               <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.2rem", letterSpacing: "0.22em", color: "#000" }}>
                 PRISM INDIA
               </span>
@@ -123,9 +123,18 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div style={{ borderTop: "1px solid #e0e0e0", marginTop: 48, paddingTop: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.7rem", color: "#999", letterSpacing: "0.1em" }}>
-            © 2025 PRISM INDIA. All rights reserved.
-          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.7rem", color: "#999", letterSpacing: "0.1em" }}>
+              © 2025 PRISM INDIA. All rights reserved.
+            </p>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.65rem", color: "#ccc" }}>
+              Developed by{" "}
+              <a href="https://webbes.in" target="_blank" rel="noopener noreferrer"
+                style={{ color: "#888", textDecoration: "underline", textUnderlineOffset: 3 }}>
+                Webbes.in
+              </a>
+            </p>
+          </div>
           <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
             {["VISA", "MC", "UPI", "COD"].map((p) => (
               <span key={p} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.6rem", fontWeight: 500, letterSpacing: "0.12em", color: "#bbb", border: "1px solid #e0e0e0", padding: "3px 8px" }}>

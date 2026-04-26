@@ -75,10 +75,10 @@ export function Navbar() {
               <Image
                 src="/logo-mark.png"
                 alt="PRISM INDIA"
-                width={32}
-                height={32}
+                width={44}
+                height={44}
                 priority
-                style={{ height: 32, width: "auto", mixBlendMode: "multiply" }}
+                style={{ height: 44, width: "auto" }}
               />
               <span
                 className="hidden sm:block"
@@ -160,7 +160,7 @@ export function Navbar() {
               }}
             >
               <ShoppingBag size={18} />
-              <span>{itemCount > 0 ? itemCount : "0"}</span>
+              <span suppressHydrationWarning>{itemCount}</span>
             </button>
           </div>
         </div>

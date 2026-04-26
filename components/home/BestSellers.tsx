@@ -7,7 +7,7 @@ import type { Product } from "@/lib/products";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.25, 0, 0, 1] as [number, number, number, number] } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } },
 };
 
 const stagger = {
@@ -87,12 +87,7 @@ export function Bestsellers({ products }: BestsellersProps) {
           whileInView="show"
           viewport={{ once: true, margin: "-60px" }}
           variants={stagger}
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: "clamp(2rem, 3vw, 2.5rem) clamp(1rem, 2.5vw, 2rem)",
-          }}
-          className="grid-cols-2 md:grid-cols-4"
+          className="grid grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-8 sm:gap-6"
         >
           {products.map((product) => (
             <motion.div key={product.id} variants={fadeUp}>

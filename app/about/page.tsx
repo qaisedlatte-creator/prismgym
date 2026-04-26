@@ -38,13 +38,13 @@ export default function AboutPage() {
             </p>
           </div>
           <div style={{ position: "relative", aspectRatio: "3/4", overflow: "hidden", border: "1px solid #e8e8e8" }}>
-            <Image src="/products/compression_full_black.png" alt="PRISM INDIA" fill style={{ objectFit: "cover", objectPosition: "50% 8%" }} />
+            <Image src="/products/compression_full_black.png" alt="PRISM INDIA" fill style={{ objectFit: "cover", objectPosition: "50% 5%", transform: "scale(1.12)", transformOrigin: "center top" }} />
           </div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, marginBottom: 80, alignItems: "center" }} className="grid-cols-1 md:grid-cols-2">
           <div style={{ position: "relative", aspectRatio: "3/4", overflow: "hidden", border: "1px solid #e8e8e8", order: 2 }} className="order-2 md:order-1">
-            <Image src="/products/ribbed_vest_maroon.png" alt="PRISM INDIA" fill style={{ objectFit: "cover", objectPosition: "50% 8%" }} />
+            <Image src="/products/ribbed_vest_maroon.png" alt="PRISM INDIA" fill style={{ objectFit: "cover", objectPosition: "50% 5%", transform: "scale(1.12)", transformOrigin: "center top" }} />
           </div>
           <div style={{ order: 1 }} className="order-1 md:order-2">
             <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "2.5rem", lineHeight: 1, color: "#000", marginBottom: 20 }}>BUILT FOR THE STREETS</h2>

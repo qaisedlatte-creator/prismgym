@@ -113,8 +113,8 @@ export function ProductDetailClient({ product, related }: { product: Product; re
                       src={product.images[selectedImage]}
                       alt={product.name}
                       fill
-                      className="object-cover"
                       priority
+                      style={{ objectFit: "cover", objectPosition: "50% 5%", transform: "scale(1.08)", transformOrigin: "center top" }}
                     />
                   </motion.div>
                 </AnimatePresence>
@@ -164,10 +164,9 @@ export function ProductDetailClient({ product, related }: { product: Product; re
 
             <p className="text-black text-2xl font-medium mb-4">{formatPrice(product.price)}</p>
 
-            {/* COD Badge */}
-            <div className="inline-flex items-center gap-2 border border-[#e8e8e8] px-3 py-1.5 text-xs text-white mb-8">
-              Cash on Delivery · <span className="text-[#666]">+₹100</span>
-            </div>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", color: "#888", marginBottom: 24 }}>
+              COD available · ₹100 handling fee applies
+            </p>
 
             {/* Color */}
             {product.colors.length > 0 && (

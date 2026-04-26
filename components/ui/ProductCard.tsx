@@ -61,7 +61,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
               alt={`${product.name} ${product.color}`}
               fill
               priority={priority}
-              style={{ objectFit: "cover", objectPosition: "50% 8%", transition: "transform 0.5s cubic-bezier(0.25,0,0,1)" }}
+              style={{ objectFit: "cover", objectPosition: "50% 5%", transform: "scale(1.12)", transformOrigin: "center top", transition: "transform 0.6s cubic-bezier(0.16,1,0.3,1)" }}
             />
           )}
 

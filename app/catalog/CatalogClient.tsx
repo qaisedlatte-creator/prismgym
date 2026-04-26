@@ -98,14 +98,7 @@ export function CatalogClient({ products, initialCategory = "ALL" }: { products:
             </p>
           </div>
         ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: "clamp(1.5rem, 3vw, 2rem) clamp(1rem, 2vw, 1.5rem)",
-            }}
-            className="grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
-          >
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-8 sm:gap-6">
             {filtered.map((product, i) => (
               <motion.div
                 key={product.id}
