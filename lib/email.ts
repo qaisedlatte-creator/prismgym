@@ -52,3 +52,67 @@ export async function sendOrderConfirmationEmail(to: string, order: any) {
     `,
   });
 }
+
+export async function sendOwnerOrderAlert(order: any, items: any[], address: any) {
+  if (!process.env.SMTP_USER) return;
+
+  const OWNER_EMAIL = process.env.OWNER_EMAIL ?? process.env.SMTP_USER;
+
+  const itemRows = items
+    .map(
+      (i: any) =>
+        `<tr>
+          <td style="padding:8px;border-bottom:1px solid #333;color:#fff;">${i.name}</td>
+          <td style="padding:8px;border-bottom:1px solid #333;color:#aaa;">${i.size} / ${i.color}</td>
+          <td style="padding:8px;border-bottom:1px solid #333;color:#aaa;">×${i.quantity}</td>
+          <td style="padding:8px;border-bottom:1px solid #333;color:#fff;">₹${(i.price * i.quantity).toLocaleString("en-IN")}</td>
+        </tr>`
+    )
+    .join("");
+
+  const isCod = order.paymentMethod === "cod";
+  const remaining = order.total - (isCod ? order.codFee : 0);
+
+  await transporter.sendMail({
+    from: `"PRISM INDIA Orders" <${process.env.SMTP_USER}>`,
+    to: OWNER_EMAIL,
+    subject: `🛒 New Order — ₹${order.total.toLocaleString("en-IN")} · ${isCod ? "COD" : "PAID"} · #${order.id.slice(0, 8).toUpperCase()}`,
+    html: `
+      <div style="background:#0a0a0a;color:#ffffff;font-family:Arial,sans-serif;max-width:640px;margin:0 auto;padding:32px 24px;">
+        <h1 style="font-size:22px;letter-spacing:0.1em;margin-bottom:4px;">NEW ORDER 🛒</h1>
+        <p style="color:#888;font-size:11px;margin-bottom:24px;">#${order.id.toUpperCase()}</p>
+
+        <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+          <thead>
+            <tr style="border-bottom:1px solid #333;">
+              <th style="text-align:left;padding:8px;color:#888;font-size:11px;">ITEM</th>
+              <th style="text-align:left;padding:8px;color:#888;font-size:11px;">VARIANT</th>
+              <th style="text-align:left;padding:8px;color:#888;font-size:11px;">QTY</th>
+              <th style="text-align:left;padding:8px;color:#888;font-size:11px;">PRICE</th>
+            </tr>
+          </thead>
+          <tbody>${itemRows}</tbody>
+        </table>
+
+        <div style="background:#1a1a1a;padding:16px;margin-bottom:16px;">
+          <p style="color:#888;font-size:11px;margin-bottom:8px;">PAYMENT</p>
+          <p style="font-size:20px;font-weight:700;margin-bottom:4px;">₹${order.total.toLocaleString("en-IN")}</p>
+          ${isCod
+            ? `<p style="color:#f59e0b;font-size:13px;">COD — ₹${order.codFee} advance paid · ₹${remaining.toLocaleString("en-IN")} to collect on delivery</p>`
+            : `<p style="color:#4ade80;font-size:13px;">✓ Fully paid online via Razorpay</p>`
+          }
+        </div>
+
+        <div style="background:#1a1a1a;padding:16px;margin-bottom:16px;">
+          <p style="color:#888;font-size:11px;margin-bottom:8px;">SHIP TO</p>
+          <p style="font-size:14px;font-weight:600;">${address.name}</p>
+          <p style="color:#ccc;font-size:13px;">${address.phone}</p>
+          <p style="color:#ccc;font-size:13px;">${address.line1}${address.line2 ? ", " + address.line2 : ""}</p>
+          <p style="color:#ccc;font-size:13px;">${address.city}, ${address.state} — ${address.pincode}</p>
+        </div>
+
+        <p style="color:#555;font-size:11px;">View all orders: prismindia.co/admin/orders</p>
+      </div>
+    `,
+  });
+}

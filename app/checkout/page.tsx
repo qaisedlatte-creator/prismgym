@@ -261,56 +261,48 @@ export default function CheckoutPage() {
     return true;
   };
 
-  const handlePlaceOrder = async () => {
-    if (!validate()) return;
-    setLoading(true);
-    try {
-      if (paymentMethod === "cod") {
-        const res = await fetch("/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            items, address, paymentMethod: "cod",
-            subtotal, shippingFee: shipping, codFee: COD_FEE, total,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Order failed");
-        clearCart();
-        router.push(`/order/${data.id}`);
-      } else {
-        const res = await fetch("/api/razorpay/create-order", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount: total }),
-        });
-        const { orderId, keyId } = await res.json();
-        if (!window.Razorpay) {
-          await new Promise<void>((resolve) => {
-            const s = document.createElement("script");
-            s.src = "https://checkout.razorpay.com/v1/checkout.js";
-            s.onload = () => resolve();
-            document.body.appendChild(s);
-          });
-        }
-        const rzp = new window.Razorpay({
-          key: keyId,
-          amount: total * 100,
-          currency: "INR",
-          name: "PRISM INDIA",
-          description: `${items.length} item${items.length > 1 ? "s" : ""}`,
-          image: "/logo-mark.png",
-          order_id: orderId,
-          prefill: {
-            name: address.name,
-            contact: address.phone,
-            ...(address.email ? { email: address.email } : {}),
-          },
-          notes: {
-            address: `${address.line1}${address.line2 ? ", " + address.line2 : ""}, ${address.city}, ${address.state} - ${address.pincode}`,
-          },
-          theme: { color: "#000000" },
-          handler: async (response: any) => {
+  const loadRazorpay = () =>
+    new Promise<void>((resolve) => {
+      if (window.Razorpay) { resolve(); return; }
+      const s = document.createElement("script");
+      s.src = "https://checkout.razorpay.com/v1/checkout.js";
+      s.onload = () => resolve();
+      document.body.appendChild(s);
+    });
+
+  const openRazorpay = async (amountToPay: number, isCod: boolean) => {
+    const res = await fetch("/api/razorpay/create-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: amountToPay }),
+    });
+    if (!res.ok) throw new Error("Could not create payment order");
+    const { orderId, keyId } = await res.json();
+    await loadRazorpay();
+
+    return new Promise<void>((resolve, reject) => {
+      const rzp = new window.Razorpay({
+        key: keyId,
+        amount: amountToPay * 100,
+        currency: "INR",
+        name: "PRISM INDIA",
+        description: isCod
+          ? `COD Advance — ₹${total - COD_FEE} remaining on delivery`
+          : `${items.length} item${items.length > 1 ? "s" : ""}`,
+        image: "/logo-mark.png",
+        order_id: orderId,
+        prefill: {
+          name: address.name,
+          contact: address.phone,
+          ...(address.email ? { email: address.email } : {}),
+        },
+        notes: {
+          delivery: `${address.line1}${address.line2 ? ", " + address.line2 : ""}, ${address.city}, ${address.state} - ${address.pincode}`,
+          type: isCod ? "cod_advance" : "full_payment",
+        },
+        theme: { color: "#000000" },
+        handler: async (response: any) => {
+          try {
             const verifyRes = await fetch("/api/razorpay/verify", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -319,23 +311,41 @@ export default function CheckoutPage() {
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpaySignature: response.razorpay_signature,
                 items, address, subtotal,
-                shippingFee: shipping, codFee: 0, total,
+                shippingFee: shipping,
+                codFee: isCod ? COD_FEE : 0,
+                total,
+                paymentMethod: isCod ? "cod" : "online",
               }),
             });
             const data = await verifyRes.json();
-            if (!verifyRes.ok) throw new Error(data.error);
+            if (!verifyRes.ok) throw new Error(data.error || "Verification failed");
             clearCart();
             router.push(`/order/${data.id}`);
-          },
-          modal: { ondismiss: () => setLoading(false) },
-        });
-        rzp.open();
-        return;
+            resolve();
+          } catch (err: any) {
+            reject(err);
+          }
+        },
+        modal: { ondismiss: () => { setLoading(false); resolve(); } },
+      });
+      rzp.open();
+    });
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!validate()) return;
+    setLoading(true);
+    try {
+      if (paymentMethod === "cod") {
+        // Collect only the ₹100 advance online; rest paid on delivery
+        await openRazorpay(COD_FEE, true);
+      } else {
+        await openRazorpay(total, false);
       }
     } catch (err: any) {
       toast({ title: "Something went wrong", description: err.message, variant: "error" });
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -472,8 +482,8 @@ export default function CheckoutPage() {
                     {
                       val: "cod" as const,
                       title: "Cash on Delivery",
-                      desc: "Pay when your order arrives",
-                      badge: "+₹100 COD fee",
+                      desc: `Pay ₹100 advance now · ₹${(total - COD_FEE).toLocaleString("en-IN")} on delivery`,
+                      badge: "₹100 advance",
                     },
                   ] as const
                 ).map(({ val, title, desc, badge }) => (
@@ -577,7 +587,7 @@ export default function CheckoutPage() {
                   ? "PROCESSING..."
                   : paymentMethod === "online"
                     ? `PAY NOW — ${formatPrice(total)}`
-                    : `PLACE ORDER — ${formatPrice(total)}`}
+                    : `PAY ₹100 ADVANCE · ₹${(total - COD_FEE).toLocaleString("en-IN")} ON DELIVERY`}
               </button>
               <p
                 style={{

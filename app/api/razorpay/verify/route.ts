@@ -3,7 +3,7 @@ import crypto from "crypto";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { sendOrderConfirmationEmail } from "@/lib/email";
+import { sendOrderConfirmationEmail, sendOwnerOrderAlert } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,9 +18,10 @@ export async function POST(req: NextRequest) {
       shippingFee,
       codFee,
       total,
+      paymentMethod = "online",
     } = await req.json();
 
-    // Verify signature
+    // Verify Razorpay signature
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET ?? "")
       .update(`${razorpayOrderId}|${razorpayPaymentId}`)
@@ -36,16 +37,20 @@ export async function POST(req: NextRequest) {
       if (user) userId = user.id;
     }
 
+    const isCod = paymentMethod === "cod";
+
     const order = await prisma.order.create({
       data: {
         userId,
-        guestEmail: userId ? undefined : address.email,
+        guestEmail: userId ? undefined : (address.email || undefined),
+        guestName: userId ? undefined : address.name,
+        guestPhone: userId ? undefined : address.phone,
         subtotal: Number(subtotal),
         shippingFee: Number(shippingFee),
-        codFee: 0,
+        codFee: isCod ? Number(codFee ?? 100) : 0,
         total: Number(total),
-        paymentMethod: "online",
-        paymentStatus: "paid",
+        paymentMethod,
+        paymentStatus: isCod ? "cod_advance_paid" : "paid",
         razorpayOrderId,
         razorpayPaymentId,
         status: "confirmed",
@@ -68,7 +73,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    sendOrderConfirmationEmail(address.email, order).catch(console.error);
+    // Send emails non-blocking
+    if (address.email) sendOrderConfirmationEmail(address.email, order).catch(console.error);
+    sendOwnerOrderAlert(order, items, address).catch(console.error);
 
     return NextResponse.json(order, { status: 201 });
   } catch (err: any) {

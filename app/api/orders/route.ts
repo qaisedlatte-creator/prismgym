@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { sendOrderConfirmationEmail } from "@/lib/email";
+import { sendOrderConfirmationEmail, sendOwnerOrderAlert } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -54,8 +54,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Send confirmation email (non-blocking)
-    sendOrderConfirmationEmail(address.email, order).catch(console.error);
+    if (address.email) sendOrderConfirmationEmail(address.email, order).catch(console.error);
+    sendOwnerOrderAlert(order, items, address).catch(console.error);
 
     return NextResponse.json(order, { status: 201 });
   } catch (err: any) {

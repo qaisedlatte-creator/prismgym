@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, ShoppingBag } from "lucide-react";
 import Link from "next/link";
@@ -10,9 +9,9 @@ import { formatPrice, calculateShipping, FREE_SHIPPING_THRESHOLD } from "@/lib/u
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQuantity, getSubtotal } = useCartStore();
-  const [promoCode, setPromoCode] = useState("");
   const subtotal = getSubtotal();
   const shipping = calculateShipping(subtotal);
+  const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
 
   return (
     <AnimatePresence>
@@ -20,7 +19,7 @@ export function CartDrawer() {
         <>
           {/* Backdrop */}
           <motion.div
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 80 }}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 80 }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -33,9 +32,9 @@ export function CartDrawer() {
               position: "fixed",
               right: 0,
               top: 0,
-              height: "100%",
-              width: "100%",
-              maxWidth: 400,
+              /* dvh adjusts as iOS toolbar shows/hides; fallback to 100% */
+              height: "100dvh",
+              width: "min(100vw, 400px)",
               background: "#111111",
               zIndex: 90,
               display: "flex",
@@ -44,7 +43,7 @@ export function CartDrawer() {
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            transition={{ type: "spring", stiffness: 320, damping: 32 }}
           >
             {/* Header */}
             <div
@@ -54,12 +53,13 @@ export function CartDrawer() {
                 justifyContent: "space-between",
                 padding: "20px 24px",
                 borderBottom: "1px solid #2a2a2a",
+                flexShrink: 0,
               }}
             >
               <h2
                 style={{
                   fontFamily: "'Bebas Neue', sans-serif",
-                  fontSize: "1.4rem",
+                  fontSize: "1.3rem",
                   letterSpacing: "0.08em",
                   color: "#fff",
                   margin: 0,
@@ -69,14 +69,45 @@ export function CartDrawer() {
               </h2>
               <button
                 onClick={closeCart}
-                style={{ color: "#888", background: "none", border: "none", cursor: "pointer", lineHeight: 1 }}
+                style={{
+                  color: "#888",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  lineHeight: 1,
+                  padding: 4,
+                  WebkitTapHighlightColor: "transparent",
+                }}
               >
                 <X size={20} />
               </button>
             </div>
 
-            {/* Items */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px" }}>
+            {/* Free-shipping nudge */}
+            {items.length > 0 && remaining > 0 && (
+              <div
+                style={{
+                  background: "#1a1a1a",
+                  borderBottom: "1px solid #2a2a2a",
+                  padding: "8px 24px",
+                  flexShrink: 0,
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: "0.65rem",
+                    color: "#888",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  Add {formatPrice(remaining)} more for free shipping
+                </p>
+              </div>
+            )}
+
+            {/* Items — scrollable */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px", WebkitOverflowScrolling: "touch" }}>
               {items.length === 0 ? (
                 <div
                   style={{
@@ -90,7 +121,7 @@ export function CartDrawer() {
                   }}
                 >
                   <ShoppingBag size={40} color="#2a2a2a" />
-                  <p style={{ color: "#888", fontSize: "0.85rem", fontFamily: "Inter, sans-serif" }}>
+                  <p style={{ color: "#555", fontSize: "0.85rem", fontFamily: "'DM Sans', sans-serif" }}>
                     Your cart is empty
                   </p>
                   <button
@@ -98,7 +129,7 @@ export function CartDrawer() {
                     style={{
                       color: "#fff",
                       fontSize: "0.7rem",
-                      fontFamily: "Inter, sans-serif",
+                      fontFamily: "'DM Sans', sans-serif",
                       letterSpacing: "0.2em",
                       textTransform: "uppercase",
                       background: "none",
@@ -106,6 +137,7 @@ export function CartDrawer() {
                       cursor: "pointer",
                       textDecoration: "underline",
                       textUnderlineOffset: 4,
+                      WebkitTapHighlightColor: "transparent",
                     }}
                   >
                     CONTINUE SHOPPING
@@ -116,13 +148,13 @@ export function CartDrawer() {
                   {items.map((item) => (
                     <div
                       key={`${item.productId}-${item.size}-${item.color}`}
-                      style={{ display: "flex", gap: 12, position: "relative" }}
+                      style={{ display: "flex", gap: 12 }}
                     >
                       {/* Thumbnail */}
                       <div
                         style={{
                           width: 64,
-                          height: 64,
+                          height: 76,
                           flexShrink: 0,
                           background: "#1a1a1a",
                           position: "relative",
@@ -139,12 +171,12 @@ export function CartDrawer() {
                       {/* Info */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                          <div>
+                          <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
                             <p
                               style={{
                                 color: "#fff",
-                                fontSize: "0.8rem",
-                                fontFamily: "Inter, sans-serif",
+                                fontSize: "0.82rem",
+                                fontFamily: "'DM Sans', sans-serif",
                                 fontWeight: 500,
                                 marginBottom: 2,
                                 lineHeight: 1.3,
@@ -152,42 +184,51 @@ export function CartDrawer() {
                             >
                               {item.name}
                             </p>
-                            <p style={{ color: "#888", fontSize: "0.7rem", fontFamily: "Inter, sans-serif" }}>
+                            <p style={{ color: "#666", fontSize: "0.7rem", fontFamily: "'DM Sans', sans-serif" }}>
                               {item.size} · {item.color}
                             </p>
                           </div>
                           <button
                             onClick={() => removeItem(item.productId, item.size, item.color)}
                             style={{
-                              color: "#888",
+                              color: "#555",
                               background: "none",
                               border: "none",
                               cursor: "pointer",
-                              fontSize: "1rem",
+                              fontSize: "1.1rem",
                               lineHeight: 1,
-                              padding: "0 0 0 8px",
                               flexShrink: 0,
+                              padding: 4,
+                              WebkitTapHighlightColor: "transparent",
                             }}
                           >
                             ×
                           </button>
                         </div>
 
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            marginTop: 10,
+                          }}
+                        >
                           {/* Qty controls */}
                           <div
                             style={{
                               display: "flex",
                               alignItems: "center",
-                              gap: 0,
                               border: "1px solid #2a2a2a",
                             }}
                           >
                             <button
-                              onClick={() => updateQuantity(item.productId, item.size, item.color, item.quantity - 1)}
+                              onClick={() =>
+                                updateQuantity(item.productId, item.size, item.color, item.quantity - 1)
+                              }
                               style={{
-                                width: 28,
-                                height: 28,
+                                width: 32,
+                                height: 32,
                                 background: "none",
                                 border: "none",
                                 cursor: "pointer",
@@ -195,6 +236,7 @@ export function CartDrawer() {
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
+                                WebkitTapHighlightColor: "transparent",
                               }}
                             >
                               <Minus size={10} />
@@ -204,17 +246,19 @@ export function CartDrawer() {
                                 width: 28,
                                 textAlign: "center",
                                 color: "#fff",
-                                fontSize: "0.8rem",
-                                fontFamily: "Inter, sans-serif",
+                                fontSize: "0.82rem",
+                                fontFamily: "'DM Sans', sans-serif",
                               }}
                             >
                               {item.quantity}
                             </span>
                             <button
-                              onClick={() => updateQuantity(item.productId, item.size, item.color, item.quantity + 1)}
+                              onClick={() =>
+                                updateQuantity(item.productId, item.size, item.color, item.quantity + 1)
+                              }
                               style={{
-                                width: 28,
-                                height: 28,
+                                width: 32,
+                                height: 32,
                                 background: "none",
                                 border: "none",
                                 cursor: "pointer",
@@ -222,12 +266,20 @@ export function CartDrawer() {
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
+                                WebkitTapHighlightColor: "transparent",
                               }}
                             >
                               <Plus size={10} />
                             </button>
                           </div>
-                          <span style={{ color: "#fff", fontSize: "0.85rem", fontFamily: "Inter, sans-serif", fontWeight: 500 }}>
+                          <span
+                            style={{
+                              color: "#fff",
+                              fontSize: "0.88rem",
+                              fontFamily: "'DM Sans', sans-serif",
+                              fontWeight: 500,
+                            }}
+                          >
                             {formatPrice(item.price * item.quantity)}
                           </span>
                         </div>
@@ -238,51 +290,17 @@ export function CartDrawer() {
               )}
             </div>
 
-            {/* Footer */}
+            {/* Footer — always visible at bottom, safe-area aware */}
             {items.length > 0 && (
-              <div style={{ padding: "0 24px 24px", borderTop: "1px solid #2a2a2a", paddingTop: 16 }}>
-                {/* Promo code */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    borderBottom: "1px solid #2a2a2a",
-                    marginBottom: 16,
-                    paddingBottom: 4,
-                  }}
-                >
-                  <input
-                    type="text"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                    placeholder="PROMO CODE"
-                    style={{
-                      flex: 1,
-                      background: "none",
-                      border: "none",
-                      color: "#fff",
-                      fontFamily: "Inter, sans-serif",
-                      fontSize: "0.75rem",
-                      letterSpacing: "0.12em",
-                      outline: "none",
-                      padding: "8px 0",
-                    }}
-                  />
-                  <button
-                    style={{
-                      color: "#888",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: "1.1rem",
-                      lineHeight: 1,
-                      padding: "4px 0 4px 8px",
-                    }}
-                  >
-                    →
-                  </button>
-                </div>
-
+              <div
+                style={{
+                  flexShrink: 0,
+                  borderTop: "1px solid #2a2a2a",
+                  padding: "16px 24px",
+                  paddingBottom: "max(20px, env(safe-area-inset-bottom, 20px))",
+                  background: "#111111",
+                }}
+              >
                 {/* Subtotal */}
                 <div
                   style={{
@@ -292,10 +310,25 @@ export function CartDrawer() {
                     marginBottom: 6,
                   }}
                 >
-                  <span style={{ color: "#888", fontSize: "0.75rem", fontFamily: "Inter, sans-serif", letterSpacing: "0.1em" }}>
-                    SUBTOTAL
+                  <span
+                    style={{
+                      color: "#888",
+                      fontSize: "0.72rem",
+                      fontFamily: "'DM Sans', sans-serif",
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Subtotal
                   </span>
-                  <span style={{ color: "#fff", fontSize: "0.9rem", fontFamily: "Inter, sans-serif", fontWeight: 600 }}>
+                  <span
+                    style={{
+                      color: "#fff",
+                      fontSize: "0.95rem",
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontWeight: 600,
+                    }}
+                  >
                     {formatPrice(subtotal)}
                   </span>
                 </div>
@@ -307,15 +340,23 @@ export function CartDrawer() {
                     marginBottom: 16,
                   }}
                 >
-                  <span style={{ color: "#888", fontSize: "0.75rem", fontFamily: "Inter, sans-serif", letterSpacing: "0.1em" }}>
-                    SHIPPING
+                  <span
+                    style={{
+                      color: "#888",
+                      fontSize: "0.72rem",
+                      fontFamily: "'DM Sans', sans-serif",
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Shipping
                   </span>
-                  <span style={{ color: "#fff", fontSize: "0.85rem", fontFamily: "Inter, sans-serif" }}>
+                  <span style={{ color: "#888", fontSize: "0.82rem", fontFamily: "'DM Sans', sans-serif" }}>
                     {shipping === 0 ? "FREE" : formatPrice(shipping)}
                   </span>
                 </div>
 
-                {/* Checkout button */}
+                {/* Checkout CTA */}
                 <Link
                   href="/checkout"
                   onClick={closeCart}
@@ -323,19 +364,18 @@ export function CartDrawer() {
                     display: "block",
                     width: "100%",
                     background: "#ffffff",
-                    color: "#0a0a0a",
+                    color: "#000",
                     textAlign: "center",
                     padding: "16px 0",
                     fontFamily: "'Bebas Neue', sans-serif",
-                    fontSize: "1.1rem",
-                    letterSpacing: "0.15em",
+                    fontSize: "1.05rem",
+                    letterSpacing: "0.14em",
                     textDecoration: "none",
-                    transition: "background 0.2s",
+                    WebkitTapHighlightColor: "transparent",
+                    touchAction: "manipulation",
                   }}
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.background = "#e0e0e0")}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.background = "#ffffff")}
                 >
-                  CHECKOUT → {formatPrice(subtotal + shipping)}
+                  CHECKOUT — {formatPrice(subtotal + shipping)}
                 </Link>
               </div>
             )}
