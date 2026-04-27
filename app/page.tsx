@@ -3,7 +3,7 @@ import { MarqueeStrip } from "@/components/home/MarqueeStrip";
 import { NewArrivals } from "@/components/home/NewArrivals";
 import { FeatureStrip } from "@/components/home/FeatureStrip";
 import { CategoryTiles } from "@/components/home/CategoryTiles";
-import { Bestsellers } from "@/components/home/Bestsellers";
+import { Bestsellers } from "@/components/home/Bestsellers.tsx";
 import { ManifestoSection } from "@/components/home/ManifestoSection";
 import { Newsletter } from "@/components/home/Newsletter";
 import { NEW_ARRIVALS, BESTSELLERS } from "@/lib/products";
