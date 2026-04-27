@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
 import { ProductCard } from "@/components/product/ProductCard";
 
 interface Product {
@@ -33,7 +32,7 @@ export function CatalogClient({ products, initialCategory = "ALL" }: { products:
       <div style={{ maxWidth: 1320, margin: "0 auto", padding: "0 clamp(1rem, 4vw, 3rem)" }}>
         {/* Header */}
         <div style={{ marginBottom: 40 }}>
-          <motion.p
+          <p
             style={{
               fontFamily: "'DM Sans', sans-serif",
               fontSize: "0.6rem",
@@ -43,12 +42,10 @@ export function CatalogClient({ products, initialCategory = "ALL" }: { products:
               color: "#888",
               marginBottom: 8,
             }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
           >
             PRISM INDIA
-          </motion.p>
-          <motion.h1
+          </p>
+          <h1
             style={{
               fontFamily: "'Bebas Neue', sans-serif",
               fontSize: "clamp(3rem, 8vw, 6rem)",
@@ -56,12 +53,9 @@ export function CatalogClient({ products, initialCategory = "ALL" }: { products:
               color: "#000",
               letterSpacing: "0.02em",
             }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08 }}
           >
             ALL PRODUCTS
-          </motion.h1>
+          </h1>
         </div>
 
         {/* Pill filters */}
@@ -99,15 +93,8 @@ export function CatalogClient({ products, initialCategory = "ALL" }: { products:
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-8 sm:gap-6">
-            {filtered.map((product, i) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04, duration: 0.4, ease: [0.25, 0, 0, 1] }}
-              >
-                <ProductCard product={product} />
-              </motion.div>
+            {filtered.map((product) => (
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}

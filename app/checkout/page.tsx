@@ -234,27 +234,29 @@ export default function CheckoutPage() {
   }
 
   const validate = () => {
-    const required: [keyof AddressForm, string][] = [
-      ["name", "full name"],
-      ["phone", "phone number"],
-      ["line1", "address"],
-      ["city", "city"],
-      ["state", "state"],
-      ["pincode", "pincode"],
-    ];
-    for (const [field, label] of required) {
-      if (!address[field].trim()) {
-        toast({ title: `Please enter your ${label}`, variant: "error" });
-        return false;
-      }
+    if (!address.name.trim()) {
+      toast({ title: "First, add your full name", variant: "error" }); return false;
+    }
+    if (!address.phone.trim()) {
+      toast({ title: "First, add your phone number", variant: "error" }); return false;
     }
     if (!/^\d{10}$/.test(address.phone)) {
-      toast({ title: "Enter a valid 10-digit phone number", variant: "error" });
-      return false;
+      toast({ title: "Phone number must be 10 digits", variant: "error" }); return false;
+    }
+    if (!address.line1.trim()) {
+      toast({ title: "First, add your address", variant: "error" }); return false;
+    }
+    if (!address.city.trim()) {
+      toast({ title: "First, add your city", variant: "error" }); return false;
+    }
+    if (!address.state.trim()) {
+      toast({ title: "First, add your state", variant: "error" }); return false;
+    }
+    if (!address.pincode.trim()) {
+      toast({ title: "First, add your pincode", variant: "error" }); return false;
     }
     if (!/^\d{6}$/.test(address.pincode)) {
-      toast({ title: "Enter a valid 6-digit pincode", variant: "error" });
-      return false;
+      toast({ title: "Pincode must be 6 digits", variant: "error" }); return false;
     }
     return true;
   };

@@ -34,47 +34,59 @@ const SIZE_GUIDE = [
 
 export function ProductDetailClient({ product, related }: { product: Product; related: Product[] }) {
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedSize, setSelectedSize] = useState("");
-  const [selectedColor, setSelectedColor] = useState(product.colors[0]);
+  // Auto-select the first size so ADD TO CART works immediately
+  const [selectedSize, setSelectedSize] = useState(product.sizes[0] || "");
+  // Only colours that have a matching image; if only 1 image keep just colour[0]
+  const displayColors = product.colors.filter((_, i) => !!product.images[i]);
+  const [selectedColor, setSelectedColor] = useState(displayColors[0] ?? product.colors[0] ?? "");
   const [quantity, setQuantity] = useState(1);
   const [accordionOpen, setAccordionOpen] = useState<string | null>(null);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [sizeError, setSizeError] = useState(false);
   const { addItem } = useCartStore();
   const { toast } = useToast();
 
   const isSoldOut = product.stock === 0;
   const hasImages = product.images && product.images.length > 0 && product.images[0];
 
-  const handleAddToCart = () => {
+  const requireSize = () => {
     if (!selectedSize) {
-      toast({ title: "Please select a size", variant: "error" });
-      return;
+      setSizeError(true);
+      toast({ title: "Select a size first", variant: "error" });
+      setTimeout(() => setSizeError(false), 2500);
+      return false;
     }
+    return true;
+  };
+
+  const handleAddToCart = () => {
+    if (!requireSize()) return;
     addItem({
       id: `${product.id}-${selectedSize}-${selectedColor}`,
       productId: product.id,
       name: product.name,
       price: product.price,
-      image: product.images[0] || "",
+      image: product.images[selectedImage] || product.images[0] || "",
       size: selectedSize,
       color: selectedColor,
       quantity,
       slug: product.slug,
     });
-    toast({ title: "Added to cart!", description: `${product.name} · ${selectedSize} · ${selectedColor}`, variant: "success" });
+    toast({
+      title: "Added to cart!",
+      description: `${product.name} · ${selectedSize} · ${selectedColor}`,
+      variant: "success",
+    });
   };
 
   const handleBuyNow = () => {
-    if (!selectedSize) {
-      toast({ title: "Please select a size", variant: "error" });
-      return;
-    }
+    if (!requireSize()) return;
     addItem({
       id: `${product.id}-${selectedSize}-${selectedColor}`,
       productId: product.id,
       name: product.name,
       price: product.price,
-      image: product.images[0] || "",
+      image: product.images[selectedImage] || product.images[0] || "",
       size: selectedSize,
       color: selectedColor,
       quantity,
@@ -83,11 +95,20 @@ export function ProductDetailClient({ product, related }: { product: Product; re
     window.location.href = "/checkout";
   };
 
+  const handleColorClick = (color: string) => {
+    setSelectedColor(color);
+    const idx = product.colors.indexOf(color);
+    if (idx !== -1 && product.images[idx]) {
+      setSelectedImage(idx);
+    }
+  };
+
   return (
-    <div className="min-h-screen pt-28 pb-24 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+    <div className="min-h-screen pt-20 pb-24 bg-white">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-[#888888] text-xs tracking-wide mb-8">
+        <div className="flex items-center gap-2 text-[#888888] text-xs tracking-wide mb-6">
           <Link href="/" className="hover:text-black transition-colors">Home</Link>
           <span>/</span>
           <Link href="/catalog" className="hover:text-black transition-colors">Catalog</Link>
@@ -95,10 +116,14 @@ export function ProductDetailClient({ product, related }: { product: Product; re
           <span style={{ color: "#000" }}>{product.name}</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
-          {/* Images */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-14">
+
+          {/* ── Images ─────────────────────────────────────────── */}
           <div className="space-y-3">
-            <div className="relative bg-[#111111] overflow-hidden" style={{ aspectRatio: "4/5" }}>
+            <div
+              className="relative overflow-hidden"
+              style={{ aspectRatio: "4/5", background: "#f4f4f4" }}
+            >
               {hasImages ? (
                 <AnimatePresence mode="wait">
                   <motion.div
@@ -107,43 +132,52 @@ export function ProductDetailClient({ product, related }: { product: Product; re
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.2 }}
                   >
                     <Image
                       src={product.images[selectedImage]}
                       alt={product.name}
                       fill
                       priority
-                      style={{ objectFit: "cover", objectPosition: "50% 5%", transform: "scale(1.08)", transformOrigin: "center top" }}
+                      style={{ objectFit: "cover", objectPosition: "center top" }}
                     />
                   </motion.div>
                 </AnimatePresence>
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span
-                    className="text-[#2a2a2a] text-center px-8"
-                    style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.5rem", letterSpacing: "0.1em" }}
+                    style={{
+                      fontFamily: "'Bebas Neue', sans-serif",
+                      fontSize: "1.5rem",
+                      letterSpacing: "0.1em",
+                      color: "#ccc",
+                    }}
                   >
                     {product.name}
                   </span>
                 </div>
               )}
               {product.isNew && (
-                <div className="absolute top-4 left-4 bg-black text-white text-[10px] font-bold tracking-[0.2em] px-2 py-1">
+                <div
+                  className="absolute top-3 left-3 bg-black text-white"
+                  style={{ fontSize: "0.5rem", fontWeight: 700, letterSpacing: "0.2em", padding: "4px 10px" }}
+                >
                   NEW
                 </div>
               )}
             </div>
 
+            {/* Thumbnails */}
             {hasImages && product.images.length > 1 && (
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {product.images.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setSelectedImage(i)}
-                    className={`relative w-16 h-20 overflow-hidden border transition-colors ${
-                      selectedImage === i ? "border-black" : "border-[#e8e8e8] hover:border-[#888888]"
+                    className={`relative overflow-hidden border transition-colors ${
+                      selectedImage === i ? "border-black" : "border-[#e8e8e8]"
                     }`}
+                    style={{ width: 60, height: 72, flexShrink: 0 }}
                   >
                     <Image src={img} alt="" fill className="object-cover" />
                   </button>
@@ -152,44 +186,72 @@ export function ProductDetailClient({ product, related }: { product: Product; re
             )}
           </div>
 
-          {/* Info */}
-          <div className="lg:pt-4">
-            <p className="text-[#888888] text-xs tracking-[0.3em] uppercase mb-3">{product.category}</p>
+          {/* ── Product Info ────────────────────────────────────── */}
+          <div className="lg:pt-2">
+            <p
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: "0.6rem",
+                letterSpacing: "0.28em",
+                textTransform: "uppercase",
+                color: "#888",
+                marginBottom: 10,
+              }}
+            >
+              {product.category}
+            </p>
             <h1
-              style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2.5rem, 5vw, 4rem)", lineHeight: 0.95 }}
-              className="text-black mb-4"
+              style={{
+                fontFamily: "'Bebas Neue', sans-serif",
+                fontSize: "clamp(2.2rem, 5vw, 3.5rem)",
+                lineHeight: 1,
+                color: "#000",
+                marginBottom: 12,
+              }}
             >
               {product.name}
             </h1>
 
-            <p className="text-black text-2xl font-medium mb-4">{formatPrice(product.price)}</p>
-
-            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", color: "#888", marginBottom: 24 }}>
-              COD available · ₹100 handling fee applies
+            <p style={{ fontSize: "1.4rem", fontWeight: 600, color: "#000", marginBottom: 6 }}>
+              {formatPrice(product.price)}
+            </p>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.7rem", color: "#aaa", marginBottom: 24 }}>
+              COD available · ₹100 handling fee
             </p>
 
-            {/* Color */}
-            {product.colors.length > 0 && (
-              <div className="mb-6">
-                <p className="text-black text-xs tracking-[0.2em] uppercase mb-3">
-                  COLOR: <span className="text-[#666]">{selectedColor}</span>
+            {/* ── Colour selector (only if multiple colours with images) ── */}
+            {displayColors.length > 1 && (
+              <div style={{ marginBottom: 24 }}>
+                <p
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: "0.6rem",
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                    color: "#000",
+                    marginBottom: 10,
+                    fontWeight: 500,
+                  }}
+                >
+                  COLOUR: <span style={{ color: "#666" }}>{selectedColor}</span>
                 </p>
-                <div className="flex gap-2">
-                  {product.colors.map((color) => (
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {displayColors.map((color) => (
                     <button
                       key={color}
-                      onClick={() => {
-                        setSelectedColor(color);
-                        const idx = product.colors.indexOf(color);
-                        if (idx !== -1 && product.images[idx]) {
-                          setSelectedImage(idx);
-                        }
+                      onClick={() => handleColorClick(color)}
+                      style={{
+                        padding: "8px 18px",
+                        fontSize: "0.72rem",
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontWeight: 500,
+                        border: selectedColor === color ? "1.5px solid #000" : "1px solid #e0e0e0",
+                        background: selectedColor === color ? "#000" : "#fff",
+                        color: selectedColor === color ? "#fff" : "#555",
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                        WebkitTapHighlightColor: "transparent",
                       }}
-                      className={`px-4 py-2 text-xs border transition-colors ${
-                        selectedColor === color
-                          ? "bg-black text-white border-black"
-                          : "border-[#e8e8e8] text-[#888888] hover:border-black hover:text-black"
-                      }`}
                     >
                       {color}
                     </button>
@@ -198,30 +260,66 @@ export function ProductDetailClient({ product, related }: { product: Product; re
               </div>
             )}
 
-            {/* Size */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-black text-xs tracking-[0.2em] uppercase">
-                  SIZE: <span className="text-[#666]">{selectedSize || "Select"}</span>
+            {/* ── Size selector ───────────────────────────────────── */}
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <p
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: "0.6rem",
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                    color: sizeError ? "#e53e3e" : "#000",
+                    fontWeight: 500,
+                    transition: "color 0.2s",
+                  }}
+                >
+                  SIZE: <span style={{ color: sizeError ? "#e53e3e" : "#666" }}>{selectedSize || "SELECT"}</span>
+                  {sizeError && (
+                    <span style={{ marginLeft: 8, fontWeight: 600 }}>← select a size first</span>
+                  )}
                 </p>
                 <button
                   onClick={() => setSizeGuideOpen(true)}
-                  className="text-[#888888] hover:text-black text-xs underline underline-offset-4 transition-colors"
+                  style={{
+                    fontSize: "0.7rem",
+                    color: "#888",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                    textUnderlineOffset: 3,
+                    fontFamily: "'DM Sans', sans-serif",
+                    WebkitTapHighlightColor: "transparent",
+                  }}
                 >
                   Size Guide
                 </button>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {product.sizes.map((size) => (
                   <button
                     key={size}
-                    onClick={() => setSelectedSize(size)}
+                    onClick={() => { setSelectedSize(size); setSizeError(false); }}
                     disabled={isSoldOut}
-                    className={`w-14 py-2.5 text-xs border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                      selectedSize === size
-                        ? "bg-black text-white border-black"
-                        : "border-[#e8e8e8] text-[#888888] hover:border-black hover:text-black"
-                    }`}
+                    style={{
+                      width: 52,
+                      padding: "10px 0",
+                      fontSize: "0.72rem",
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontWeight: 500,
+                      border: selectedSize === size
+                        ? "1.5px solid #000"
+                        : sizeError
+                          ? "1px solid #e53e3e"
+                          : "1px solid #e0e0e0",
+                      background: selectedSize === size ? "#000" : "#fff",
+                      color: selectedSize === size ? "#fff" : sizeError ? "#e53e3e" : "#555",
+                      cursor: isSoldOut ? "not-allowed" : "pointer",
+                      opacity: isSoldOut ? 0.4 : 1,
+                      transition: "all 0.15s",
+                      WebkitTapHighlightColor: "transparent",
+                    }}
                   >
                     {size}
                   </button>
@@ -229,39 +327,87 @@ export function ProductDetailClient({ product, related }: { product: Product; re
               </div>
             </div>
 
-            {/* Quantity */}
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex items-center border border-[#e8e8e8]">
+            {/* ── Quantity ─────────────────────────────────────────── */}
+            <div style={{ display: "flex", alignItems: "center", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", border: "1px solid #e0e0e0" }}>
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-4 py-3 text-[#888888] hover:text-black transition-colors text-lg"
+                  style={{
+                    width: 44, height: 44, background: "none", border: "none",
+                    cursor: "pointer", color: "#555", fontSize: "1.2rem",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    WebkitTapHighlightColor: "transparent",
+                  }}
                 >
                   −
                 </button>
-                <span className="px-4 text-[#000] font-medium min-w-[3rem] text-center">{quantity}</span>
+                <span
+                  style={{
+                    width: 44, textAlign: "center", fontSize: "0.9rem",
+                    fontFamily: "'DM Sans', sans-serif", fontWeight: 500, color: "#000",
+                  }}
+                >
+                  {quantity}
+                </span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
-                  className="px-4 py-3 text-[#888888] hover:text-black transition-colors text-lg"
+                  style={{
+                    width: 44, height: 44, background: "none", border: "none",
+                    cursor: "pointer", color: "#555", fontSize: "1.2rem",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    WebkitTapHighlightColor: "transparent",
+                  }}
                 >
                   +
                 </button>
               </div>
             </div>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-8">
+            {/* ── CTAs ─────────────────────────────────────────────── */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
               <button
                 onClick={handleAddToCart}
                 disabled={isSoldOut}
-                className="flex-1 bg-black text-white py-4 text-sm font-bold tracking-[0.2em] uppercase hover:bg-[#c0c0c0] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  width: "100%",
+                  background: isSoldOut ? "#aaa" : "#000",
+                  color: "#fff",
+                  border: "none",
+                  padding: "16px 0",
+                  fontSize: "0.72rem",
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontWeight: 600,
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                  cursor: isSoldOut ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  WebkitTapHighlightColor: "transparent",
+                }}
               >
-                <ShoppingBag size={16} />
+                <ShoppingBag size={15} />
                 {isSoldOut ? "SOLD OUT" : "ADD TO CART"}
               </button>
+
               {!isSoldOut && (
                 <button
                   onClick={handleBuyNow}
-                  className="flex-1 bg-black border border-black text-white py-4 text-sm font-bold tracking-[0.2em] uppercase hover:bg-white hover:text-black transition-colors"
+                  style={{
+                    width: "100%",
+                    background: "#fff",
+                    color: "#000",
+                    border: "1.5px solid #000",
+                    padding: "16px 0",
+                    fontSize: "0.72rem",
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontWeight: 600,
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                    WebkitTapHighlightColor: "transparent",
+                  }}
                 >
                   BUY NOW
                 </button>
@@ -269,47 +415,77 @@ export function ProductDetailClient({ product, related }: { product: Product; re
             </div>
 
             {/* Shipping info */}
-            <div className="border border-[#e8e8e8] p-4 space-y-2 mb-8 text-xs text-[#666]">
-              <div>🚚 Free shipping on orders above ₹999</div>
-              <div>📦 Estimated delivery: 5-7 business days</div>
-              <div>↩️ Easy returns within 7 days</div>
+            <div
+              style={{
+                border: "1px solid #f0f0f0",
+                padding: "14px 16px",
+                marginBottom: 24,
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+              }}
+            >
+              {["🚚 Free shipping on orders above ₹999", "📦 Estimated delivery: 5-7 business days", "↩️ Easy returns within 7 days"].map((line) => (
+                <p key={line} style={{ fontSize: "0.72rem", color: "#666", fontFamily: "'DM Sans', sans-serif" }}>
+                  {line}
+                </p>
+              ))}
             </div>
 
-            {/* Accordion */}
+            {/* ── Accordion ────────────────────────────────────────── */}
             {[
               { key: "description", title: "DESCRIPTION", content: product.description },
               { key: "care", title: "CARE INSTRUCTIONS", content: "Machine wash cold at 30°C. Do not tumble dry. Do not iron on print. Wash inside out." },
               { key: "fabric", title: "FABRIC & FIT", content: "88% Polyester, 12% Elastane. Four-way stretch. Quick-dry moisture wicking. Pre-shrunk." },
             ].map(({ key, title, content }) => (
-              <div key={key} className="border-t border-[#e8e8e8]">
+              <div key={key} style={{ borderTop: "1px solid #f0f0f0" }}>
                 <button
                   onClick={() => setAccordionOpen(accordionOpen === key ? null : key)}
-                  className="w-full flex items-center justify-between py-4 text-left"
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "14px 0",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    WebkitTapHighlightColor: "transparent",
+                  }}
                 >
                   <span
-                    className="text-black text-xs tracking-[0.2em] uppercase"
-                    style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+                    style={{
+                      fontFamily: "'Bebas Neue', sans-serif",
+                      fontSize: "0.85rem",
+                      letterSpacing: "0.18em",
+                      color: "#000",
+                    }}
                   >
                     {title}
                   </span>
                   <ChevronDown
-                    size={16}
-                    className={`text-[#888888] transition-transform ${accordionOpen === key ? "rotate-180" : ""}`}
+                    size={15}
+                    color="#888"
+                    style={{
+                      transform: accordionOpen === key ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s",
+                      flexShrink: 0,
+                    }}
                   />
                 </button>
-                <AnimatePresence>
-                  {accordionOpen === key && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25 }}
-                      className="overflow-hidden"
-                    >
-                      <p className="text-[#888888] text-sm leading-relaxed pb-4">{content}</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {accordionOpen === key && (
+                  <p
+                    style={{
+                      fontSize: "0.82rem",
+                      color: "#666",
+                      fontFamily: "'DM Sans', sans-serif",
+                      lineHeight: 1.7,
+                      paddingBottom: 14,
+                    }}
+                  >
+                    {content}
+                  </p>
+                )}
               </div>
             ))}
           </div>
@@ -317,69 +493,113 @@ export function ProductDetailClient({ product, related }: { product: Product; re
 
         {/* Related Products */}
         {related.length > 0 && (
-          <div className="mt-24">
+          <div style={{ marginTop: 64 }}>
             <h2
-              style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2rem, 5vw, 4rem)", lineHeight: 1 }}
-              className="text-black tracking-wide mb-8"
+              style={{
+                fontFamily: "'Bebas Neue', sans-serif",
+                fontSize: "clamp(1.8rem, 5vw, 3rem)",
+                color: "#000",
+                marginBottom: 24,
+              }}
             >
               YOU MIGHT ALSO LIKE
             </h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {related.map((p) => <ProductCard key={p.id} product={p} />)}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+              {related.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
             </div>
           </div>
         )}
       </div>
 
-      {/* Size Guide Modal */}
+      {/* ── Size Guide Modal ─────────────────────────────────────── */}
       <AnimatePresence>
         {sizeGuideOpen && (
           <>
             <motion.div
-              className="fixed inset-0 bg-black/70 z-50 backdrop-blur-sm"
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 50 }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSizeGuideOpen(false)}
             />
             <motion.div
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#0a0a0a] border border-[#e8e8e8] p-8 z-50 w-full max-w-md mx-4"
-              initial={{ opacity: 0, scale: 0.95 }}
+              style={{
+                position: "fixed",
+                left: "50%",
+                top: "50%",
+                transform: "translate(-50%,-50%)",
+                background: "#fff",
+                border: "1px solid #e8e8e8",
+                padding: 28,
+                zIndex: 51,
+                width: "calc(100% - 32px)",
+                maxWidth: 400,
+              }}
+              initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
+              exit={{ opacity: 0, scale: 0.96 }}
             >
-              <div className="flex items-center justify-between mb-8">
-                <h2
-                  className="text-black tracking-widest"
-                  style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.5rem" }}
-                >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.4rem", letterSpacing: "0.06em" }}>
                   SIZE GUIDE
                 </h2>
-                <button onClick={() => setSizeGuideOpen(false)} className="text-[#888888] hover:text-black transition-colors">
-                  <X size={20} />
+                <button
+                  onClick={() => setSizeGuideOpen(false)}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#666" }}
+                >
+                  <X size={18} />
                 </button>
               </div>
-              <table className="w-full text-sm">
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
-                  <tr className="border-b border-[#e8e8e8]">
-                    <th className="text-left text-[#888888] text-xs tracking-[0.2em] pb-3 uppercase">Size</th>
-                    <th className="text-left text-[#888888] text-xs tracking-[0.2em] pb-3 uppercase">Chest (cm)</th>
-                    <th className="text-left text-[#888888] text-xs tracking-[0.2em] pb-3 uppercase">Waist (cm)</th>
+                  <tr style={{ borderBottom: "1px solid #e8e8e8" }}>
+                    {["Size", "Chest (cm)", "Waist (cm)"].map((h) => (
+                      <th
+                        key={h}
+                        style={{
+                          textAlign: "left",
+                          fontSize: "0.6rem",
+                          letterSpacing: "0.18em",
+                          textTransform: "uppercase",
+                          color: "#888",
+                          paddingBottom: 10,
+                          fontFamily: "'DM Sans', sans-serif",
+                        }}
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {SIZE_GUIDE.map((row) => (
-                    <tr key={row.size} className="border-b border-[#111111]">
-                      <td className={`py-3 font-medium ${selectedSize === row.size ? "text-white" : "text-[#666]"}`}>
+                    <tr key={row.size} style={{ borderBottom: "1px solid #f4f4f4" }}>
+                      <td
+                        style={{
+                          padding: "10px 0",
+                          fontFamily: "'DM Sans', sans-serif",
+                          fontWeight: selectedSize === row.size ? 700 : 400,
+                          color: selectedSize === row.size ? "#000" : "#555",
+                          fontSize: "0.85rem",
+                        }}
+                      >
                         {row.size}
                       </td>
-                      <td className="py-3 text-[#666]">{row.chest}</td>
-                      <td className="py-3 text-[#666]">{row.waist}</td>
+                      <td style={{ padding: "10px 0", color: "#666", fontSize: "0.82rem", fontFamily: "'DM Sans', sans-serif" }}>
+                        {row.chest}
+                      </td>
+                      <td style={{ padding: "10px 0", color: "#666", fontSize: "0.82rem", fontFamily: "'DM Sans', sans-serif" }}>
+                        {row.waist}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <p className="text-[#888888] text-xs mt-6">All measurements in centimetres. If between sizes, size up.</p>
+              <p style={{ marginTop: 16, fontSize: "0.68rem", color: "#aaa", fontFamily: "'DM Sans', sans-serif" }}>
+                All measurements in centimetres. If between sizes, size up.
+              </p>
             </motion.div>
           </>
         )}
