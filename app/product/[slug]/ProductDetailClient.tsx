@@ -178,7 +178,13 @@ export function ProductDetailClient({ product, related }: { product: Product; re
                   {product.colors.map((color) => (
                     <button
                       key={color}
-                      onClick={() => setSelectedColor(color)}
+                      onClick={() => {
+                        setSelectedColor(color);
+                        const idx = product.colors.indexOf(color);
+                        if (idx !== -1 && product.images[idx]) {
+                          setSelectedImage(idx);
+                        }
+                      }}
                       className={`px-4 py-2 text-xs border transition-colors ${
                         selectedColor === color
                           ? "bg-black text-white border-black"
@@ -255,7 +261,7 @@ export function ProductDetailClient({ product, related }: { product: Product; re
               {!isSoldOut && (
                 <button
                   onClick={handleBuyNow}
-                  className="flex-1 border border-black text-white py-4 text-sm font-bold tracking-[0.2em] uppercase hover:bg-white hover:text-[#0a0a0a] transition-colors"
+                  className="flex-1 bg-black border border-black text-white py-4 text-sm font-bold tracking-[0.2em] uppercase hover:bg-white hover:text-black transition-colors"
                 >
                   BUY NOW
                 </button>
